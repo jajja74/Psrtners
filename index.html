@@ -1,0 +1,1905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WinWin Partners</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+        }
+        .menu-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .menu-scroll::-webkit-scrollbar-thumb {
+            background: #555; 
+        }
+        /* Very light watermark style */
+        .watermark-icon {
+            position: absolute;
+            right: -20px;
+            top: 60%;
+            transform: translateY(-50%);
+            font-size: 140px;
+            line-height: 1;
+            color: #f4f4f4;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .card-content {
+            position: relative;
+            z-index: 10;
+        }
+        .stat-card::before {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background-color: var(--stripe-color);
+            z-index: 20;
+        }
+        /* Hexagon Dark Green Background for Login Screen */
+        .login-bg {
+            background-color: #222426;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='207.846' viewBox='0 0 120 207.846'%3E%3Cg fill='none' stroke='%234a6b1d' stroke-width='3.5' stroke-opacity='0.65'%3E%3Cpath d='M120 69.282L60 103.923 0 69.282V0l60-34.641L120 0v69.282zM60 207.846l-60-34.641v-69.282l60-34.641 60 34.641v69.282l-60 34.641z'/%3E%3C/g%3E%3C/svg%3E");
+            background-size: 130px;
+        }
+        
+        /* Table Styles for Commission, Affiliate Links & Promo Pages */
+        .comm-table th {
+            border-left: 1px solid #333;
+        }
+        .comm-table th:first-child {
+            border-left: none;
+        }
+        .expanded-content td {
+            padding: 0;
+        }
+        .detail-row {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 13px;
+            align-items: center;
+        }
+        .detail-label {
+            color: #555;
+        }
+        .detail-value {
+            color: #111;
+            word-break: break-all;
+        }
+
+        /* Slanted Tab Style for Affiliate Links */
+        .tab-bar {
+            display: flex;
+            background-color: #f2f3f7;
+            margin-bottom: 14px;
+            overflow: hidden;
+        }
+        .tab-btn {
+            position: relative;
+            padding: 10px 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            flex: 1;
+            text-align: left;
+        }
+        .tab-btn.active-tab {
+            background-color: #16181b;
+            color: #ffffff;
+            clip-path: polygon(0 0, 92% 0, 100% 100%, 0% 100%);
+            z-index: 2;
+        }
+        .tab-btn.active-tab-right {
+            background-color: #16181b;
+            color: #ffffff;
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 8% 100%);
+            margin-left: -14px;
+            padding-left: 28px;
+            z-index: 2;
+        }
+        .tab-btn.inactive-tab {
+            background-color: #f2f3f7;
+            color: #222222;
+        }
+        .status-spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #d1d5db;
+            border-top-color: #8cc63f;
+            border-radius: 50%;
+            animation: status-spin 0.8s linear infinite;
+        }
+        @keyframes status-spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="relative">
+
+    <!-- LOGIN SCREEN (Shown Initially) -->
+    <div id="loginScreen" class="fixed inset-0 z-50 login-bg flex items-center justify-center px-5">
+        <div class="w-full max-w-[340px] bg-[#7c8288] p-7 shadow-2xl">
+            <form id="loginForm" class="space-y-4">
+                
+                <!-- Error Alert -->
+                <div id="loginError" class="hidden bg-red-600 text-white text-xs font-medium px-3 py-2 text-center">
+                    Invalid username or password
+                </div>
+
+                <!-- Username Field -->
+                <div class="flex items-center bg-[#eef3f8] border border-[#9ab0c7] px-3.5 py-2.5">
+                    <i class="fa-solid fa-user text-[#5c6f7e] text-xl w-7"></i>
+                    <input type="text" id="loginUsername" required placeholder="Username"
+                        class="w-full bg-transparent text-[#111111] text-[17px] pl-2 focus:outline-none placeholder-gray-400">
+                </div>
+
+                <!-- Password Field -->
+                <div class="flex items-center bg-[#eef3f8] border border-[#9ab0c7] px-3.5 py-2.5">
+                    <i class="fa-solid fa-lock text-[#5c6f7e] text-xl w-7"></i>
+                    <input type="password" id="loginPassword" required placeholder="Password"
+                        class="w-full bg-transparent text-[#111111] text-[17px] pl-2 focus:outline-none placeholder-gray-400">
+                </div>
+
+                <!-- Login Button -->
+                <div class="pt-1">
+                    <button type="submit" id="loginSubmitBtn"
+                        class="w-full bg-[#84d000] hover:bg-[#78bd00] text-[#111111] text-[15px] font-medium py-2.5 uppercase tracking-wide transition">
+                        LOGIN
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- APP CONTENT (Hidden until Logged In) -->
+    <div id="appWrapper" class="hidden">
+
+        <div id="paymentHistoryNotice" role="status" class="hidden fixed left-1/2 top-16 z-[60] -translate-x-1/2 bg-[#1a1a1a] px-4 py-3 text-center text-sm font-medium text-white shadow-lg">
+            Minimum withdrawal amount is $30.
+        </div>
+
+        <!-- Header -->
+        <header class="bg-[#1a1a1a] flex justify-between items-center px-4 py-3 sticky top-0 z-40">
+            <!-- Logo -->
+            <div id="logoBtn" class="flex flex-col leading-none cursor-pointer">
+                <div class="text-xl font-extrabold italic tracking-tight">
+                    <span class="text-white">1x</span><span class="text-[#003b7a]">Bet</span>
+                </div>
+                <span class="text-white text-[9px] tracking-[0.2em] mt-1 font-medium">PARTNERS</span>
+            </div>
+            
+            <!-- Header Icons -->
+            <div class="flex items-center gap-5">
+                <button id="profileBtn" class="focus:outline-none">
+                    <i class="fa-solid fa-circle-user text-white text-[28px]"></i>
+                </button>
+                <button id="menuOpenBtn" class="text-[#8cc63f] focus:outline-none flex flex-col gap-1.5 mt-1">
+                    <span class="block w-8 h-1 bg-[#8cc63f]"></span>
+                    <span class="block w-8 h-1 bg-[#8cc63f]"></span>
+                    <span class="block w-8 h-1 bg-[#8cc63f]"></span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Sidebar Overlay & Menu -->
+        <div id="sidebarContainer" class="fixed inset-0 z-50 hidden">
+            <div id="menuOverlay" class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0"></div>
+            
+            <button id="menuCloseBtn" class="absolute top-4 right-[70%] md:right-[320px] text-white text-2xl font-bold z-50 transition-opacity duration-300 opacity-0 mr-4 mt-2">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div id="sidebarMenu" class="absolute right-0 top-0 bottom-0 w-[70%] max-w-[320px] bg-[#333333] transform translate-x-full transition-transform duration-300 flex flex-col shadow-2xl menu-scroll overflow-y-auto">
+                <!-- Main Menu Section -->
+                <div class="pt-6 pb-2 px-5">
+                    <h3 class="text-gray-400 text-xs font-semibold tracking-wider mb-2">MAIN MENU</h3>
+                    <ul class="flex flex-col text-[15px]">
+                        <li class="py-2.5">
+                            <a href="#" id="navMainPage" class="flex items-center text-[#8cc63f] gap-4 font-medium">
+                                <i class="fa-solid fa-house w-5 text-center text-lg"></i> Main page
+                            </a>
+                        </li>
+                        <li class="py-2.5">
+                            <a href="#" id="navCommissionPage" class="flex items-center text-[#cccccc] hover:text-white gap-4">
+                                <i class="fa-solid fa-dollar-sign w-5 text-center text-lg"></i> Commission structure
+                            </a>
+                        </li>
+                        <li class="py-2.5">
+                            <button id="navPaymentHistory" type="button" class="flex items-center text-[#cccccc] hover:text-white gap-4">
+                                <i class="fa-solid fa-money-bill-1-wave w-5 text-center text-lg"></i> Payment history
+                            </button>
+                        </li>
+                        <li class="py-2.5">
+                            <a href="#" id="navAccountPage" class="flex items-center text-[#cccccc] hover:text-white gap-4">
+                                <i class="fa-solid fa-user w-5 text-center text-lg"></i> Account
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Marketing Section -->
+                <div class="py-3 px-5 bg-[#2a2a2a]/50">
+                    <h3 class="text-gray-400 text-xs font-semibold tracking-wider mb-2 mt-2">MARKETING</h3>
+                    <ul class="flex flex-col text-[15px]">
+                        <li class="py-2.5">
+                            <a href="#" id="navAffiliateLinksPage" class="flex items-center text-[#cccccc] hover:text-white gap-4">
+                                <i class="fa-solid fa-arrow-up-right-from-square w-5 text-center text-lg"></i> Affiliate links
+                            </a>
+                        </li>
+                        <li class="py-2.5">
+                            <a href="#" id="navPromoCodesPage" class="flex items-center text-[#cccccc] hover:text-white gap-4">
+                                <i class="fa-solid fa-barcode w-5 text-center text-lg"></i> Promo codes
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Reports Section -->
+                <div class="py-3 px-5">
+                    <h3 class="text-gray-400 text-xs font-semibold tracking-wider mb-2 mt-2">REPORTS</h3>
+                    <ul class="flex flex-col text-[15px] pb-6">
+                        <li class="py-2.5">
+                            <a href="#" id="navSummaryPage" class="flex items-center text-[#cccccc] hover:text-white gap-4">
+                                <i class="fa-solid fa-chart-simple w-5 text-center text-lg"></i> Summary
+                            </a>
+                        </li>
+                        <li class="py-2.5">
+                            <a href="#" id="navPlayerReportPage" class="flex items-center text-[#cccccc] hover:text-white gap-4">
+                                <i class="fa-solid fa-id-card-clip w-5 text-center text-lg"></i> Player report
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Logout Button -->
+                <div class="px-5 pb-6 pt-3">
+                    <button id="logoutBtn" type="button" class="w-full flex items-center gap-4 bg-red-500 hover:bg-red-600 text-white text-[15px] py-2.5 px-3 transition-colors">
+                        <i class="fa-solid fa-right-from-bracket w-5 text-center text-lg"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content (Dashboard) -->
+        <main id="dashboardView" class="max-w-lg mx-auto bg-white min-h-[calc(100vh-60px)] px-4 py-4 border-x border-gray-100">
+            <!-- Cards Container -->
+            <div class="flex flex-col border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.05)] rounded-sm overflow-hidden mb-6">
+                <!-- Card 1: Available -->
+                <div class="relative stat-card bg-white py-5 text-center overflow-hidden" style="--stripe-color: #8cc63f;">
+                    <i class="fa-solid fa-circle-dollar-to-slot watermark-icon"></i>
+                    <div class="card-content">
+                        <h2 id="home-available_to_withdraw" class="text-4xl font-extrabold text-[#8cc63f] mb-1">$ 0.00</h2>
+                        <div class="flex items-center justify-center gap-1.5 text-[12px] font-bold text-gray-600 uppercase tracking-wide">
+                            <i class="fa-solid fa-money-bill-1-wave text-[#8cc63f] text-[13px]"></i> 
+                            AVAILABLE TO WITHDRAW 
+                            <i class="fa-solid fa-circle-info text-[#8cc63f] text-[13px]"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Yesterday -->
+                <div class="relative stat-card bg-white py-5 text-center overflow-hidden" style="--stripe-color: #1d4ed8;">
+                    <i class="fa-solid fa-bolt watermark-icon"></i>
+                    <div class="card-content">
+                        <h2 id="home-yesterday" class="text-4xl font-extrabold text-[#1d4ed8] mb-1">$ 0.00</h2>
+                        <div class="flex items-center justify-center gap-1.5 text-[12px] font-bold text-gray-600 uppercase tracking-wide">
+                            <i class="fa-solid fa-bolt text-[#1d4ed8] text-[13px]"></i> 
+                            YESTERDAY
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Current Month -->
+                <div class="relative stat-card bg-white py-5 text-center overflow-hidden" style="--stripe-color: #f43f5e;">
+                    <i class="fa-solid fa-arrow-trend-up watermark-icon"></i>
+                    <div class="card-content">
+                        <h2 id="home-current_month" class="text-4xl font-extrabold text-[#f43f5e] mb-1">$ 0.00</h2>
+                        <div class="flex items-center justify-center gap-1.5 text-[12px] font-bold text-gray-600 uppercase tracking-wide">
+                            <i class="fa-solid fa-arrow-trend-up text-[#f43f5e] text-[13px]"></i> 
+                            CURRENT MONTH
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 4: 30 Days -->
+                <div class="relative stat-card bg-white py-5 text-center overflow-hidden" style="--stripe-color: #eab308;">
+                    <i class="fa-solid fa-calendar-check watermark-icon"></i>
+                    <div class="card-content">
+                        <h2 id="home-days_30" class="text-4xl font-extrabold text-[#eab308] mb-1">$ 0.00</h2>
+                        <div class="flex items-center justify-center gap-1.5 text-[12px] font-bold text-gray-600 uppercase tracking-wide">
+                            <i class="fa-regular fa-calendar-check text-[#eab308] text-[13px]"></i> 
+                            30 DAYS
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 5: Total -->
+                <div class="relative stat-card bg-white py-5 text-center overflow-hidden" style="--stripe-color: #3b82f6;">
+                    <i class="fa-solid fa-check watermark-icon"></i>
+                    <div class="card-content">
+                        <h2 id="home-total" class="text-4xl font-extrabold text-[#3b82f6] mb-1">$ 0.00</h2>
+                        <div class="flex items-center justify-center gap-1.5 text-[12px] font-bold text-gray-600 uppercase tracking-wide">
+                            <i class="fa-solid fa-check text-[#3b82f6] text-[13px]"></i> 
+                            TOTAL
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Refresh Button -->
+            <div class="flex justify-center mb-6">
+                <button id="refreshHomeStatisticsBtn" type="button" class="bg-[#8cc63f] hover:bg-[#7ebd34] text-[#111] text-[13px] font-bold py-3 px-6 flex justify-center items-center gap-2 w-full max-w-[280px]">
+                    <i class="fa-solid fa-rotate"></i> REFRESH STATISTICS
+                </button>
+            </div>
+        </main>
+
+        <!-- Summary Content View -->
+        <section id="summaryView" class="hidden max-w-lg mx-auto bg-white min-h-[calc(100vh-60px)] p-3">
+            <div class="space-y-3">
+                <div>
+                    <label for="summaryPeriod" class="mb-2 block text-sm font-medium text-gray-700">Time interval</label>
+                    <select id="summaryPeriod" class="w-full border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                        <option value="exact">Exact period</option>
+                        <option value="today">Today</option>
+                        <option value="yesterday">Yesterday</option>
+                        <option value="current-month" selected>Current month</option>
+                        <option value="last-month">Last month</option>
+                        <option value="current-year">Current year</option>
+                        <option value="last-year">Last year</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-2 border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                    <i class="fa-regular fa-calendar text-lg"></i>
+                    <input id="summaryDateFrom" type="date" aria-label="Start date" class="min-w-0 flex-1 bg-transparent text-center focus:outline-none">
+                    <i class="fa-solid fa-arrow-right text-gray-400"></i>
+                    <input id="summaryDateTo" type="date" aria-label="End date" class="min-w-0 flex-1 bg-transparent text-center focus:outline-none">
+                </div>
+
+                <div>
+                    <label for="summarySource" class="mb-2 block text-sm font-medium text-gray-700">Registration Source</label>
+                    <select id="summarySource" class="w-full border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none">
+                        <option value="">Select...</option>
+                        <option>Website</option>
+                        <option>Affiliate link</option>
+                        <option>Promo code</option>
+                    </select>
+                </div>
+
+                <button id="generateSummaryBtn" type="button" class="w-full bg-[#84d000] py-2.5 text-sm font-semibold text-[#111] hover:bg-[#78bd00]">GENERATE REPORT</button>
+
+                <div class="flex items-center justify-between gap-3 pt-1">
+                    <select id="summaryItemsLimit" class="w-[48%] bg-[#f2f3f7] px-3 py-2 text-sm text-gray-700 focus:outline-none">
+                        <option value="8" selected>8 items selected</option>
+                        <option value="10">10 items selected</option>
+                        <option value="25">25 items selected</option>
+                    </select>
+                    <button id="exportSummaryBtn" type="button" class="w-[40%] bg-[#e1ef32] py-2 text-sm font-semibold text-white hover:bg-[#d4e329]">
+                        EXPORT <i class="fa-solid fa-chevron-down ml-2 text-xs"></i>
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full table-fixed border-collapse text-xs">
+                        <thead class="bg-[#1a1a1a] text-white">
+                            <tr>
+                                <th class="w-9 border-r-2 border-white px-1.5 py-2"></th>
+                                <th class="w-[30%] border-r-2 border-white px-2 py-2 text-left font-semibold">Website ID <i class="fa-solid fa-arrows-up-down ml-1 text-[10px]"></i></th>
+                                <th class="px-2 py-2 text-left font-semibold">Website <i class="fa-solid fa-arrows-up-down ml-1 text-[10px]"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="bg-[#eef0f4] text-gray-700">
+                                <td class="border-r-2 border-white px-1.5 py-1.5 text-center">
+                                    <button id="summaryExpandBtn" type="button" aria-expanded="false" aria-label="Expand website report" class="h-6 w-6 rounded-full bg-[#84d000] text-base leading-none text-white">+</button>
+                                </td>
+                                <td class="border-r-2 border-white px-2 py-1.5 text-center">588578</td>
+                                <td class="break-all px-2 py-1.5">1xPartners.com</td>
+                            </tr>
+                            <tr id="summaryDetailsRow" class="hidden">
+                                <td colspan="3" class="p-0">
+                                    <table class="w-full table-fixed border-collapse text-xs">
+                                        <thead class="border-y-2 border-white bg-white text-gray-700">
+                                            <tr><th class="w-[48%] px-2 py-2"></th><th class="w-[26%] px-1 py-2 text-center font-medium">Current</th><th class="w-[26%] px-1 py-2 text-center font-medium">Total</th></tr>
+                                        </thead>
+                                        <tbody class="divide-y-2 divide-white bg-[#f8f9fb] text-gray-700">
+                                            <tr><td class="px-2 py-1.5">Registrations:</td><td id="summary-current-registrations" class="px-1 py-1.5 text-center">0</td><td id="summary-total-registrations" class="px-1 py-1.5 text-center">0</td></tr>
+                                            <tr><td class="px-2 py-1.5">New depositors:</td><td id="summary-current-new_deposit" class="px-1 py-1.5 text-center">0</td><td id="summary-total-new_deposit" class="px-1 py-1.5 text-center">0</td></tr>
+                                            <tr><td class="px-2 py-1.5">Total deposit amount:</td><td id="summary-current-total_deposit" class="px-1 py-1.5 text-center">0.00 $</td><td id="summary-total-total_deposit" class="px-1 py-1.5 text-center">0.00 $</td></tr>
+                                            <tr><td class="px-2 py-1.5">Bonus amount:</td><td id="summary-current-bonus_amount" class="px-1 py-1.5 text-center">0.00 $</td><td id="summary-total-bonus_amount" class="px-1 py-1.5 text-center">0.00 $</td></tr>
+                                            <tr><td class="px-2 py-1.5">Company profit (total):</td><td id="summary-current-company_profit" class="px-1 py-1.5 text-center">0.00 $</td><td id="summary-total-company_profit" class="px-1 py-1.5 text-center">0.00 $</td></tr>
+                                            <tr><td class="px-2 py-1.5">Commission amount:</td><td id="summary-current-commission_amount" class="px-1 py-1.5 text-center">0.00 $</td><td id="summary-total-commission_amount" class="px-1 py-1.5 text-center">0.00 $</td></tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p id="summaryReportMessage" role="status" class="hidden text-xs text-red-600"></p>
+                <div class="text-sm text-gray-400">Records from 1 to 1 (1 records in total)</div>
+                <div class="flex gap-1">
+                    <button type="button" disabled class="h-10 w-10 bg-[#f2f3f7] text-gray-400">&lt;</button>
+                    <button type="button" class="h-10 w-10 bg-[#84d000] text-white">1</button>
+                    <button type="button" disabled class="h-10 w-10 bg-[#f2f3f7] text-gray-400">&gt;</button>
+                </div>
+                <select aria-label="Rows per page" class="w-20 border border-gray-300 bg-white px-3 py-2 text-sm">
+                    <option>10</option>
+                </select>
+            </div>
+        </section>
+
+        <!-- Commission Structure Content View -->
+        <section id="commissionView" class="hidden max-w-lg mx-auto bg-white min-h-[calc(100vh-60px)] p-4">
+            <div class="bg-white border border-gray-200 shadow-sm p-3">
+                <!-- Dropdown Top -->
+                <div class="mb-4 w-48">
+                    <div class="relative">
+                        <select class="w-full appearance-none bg-[#f2f3f7] border-none text-[#333] text-[14px] px-3 py-2 pr-8 focus:outline-none">
+                            <option selected>6 items selected</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                            <i class="fa-solid fa-chevron-down text-[11px]"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="w-full overflow-x-auto">
+                    <table class="w-full comm-table text-left border-collapse">
+                        <thead>
+                            <tr class="bg-[#1a1a1a] text-white text-[13px]">
+                                <th class="w-10 py-3 text-center"></th>
+                                <th class="py-3 px-2 font-semibold">
+                                    <div class="flex justify-between items-center">
+                                        Currency
+                                        <i class="fa-solid fa-arrow-down-up-across-line text-[10px] text-gray-300"></i>
+                                    </div>
+                                </th>
+                                <th class="py-3 px-2 font-semibold">
+                                    <div class="flex justify-between items-center">
+                                        Commission structure
+                                        <i class="fa-solid fa-arrow-down-up-across-line text-[10px] text-gray-300"></i>
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-[14px]">
+                            <!-- Row 1: Referral -->
+                            <tr class="bg-[#f3f4f6] border-b border-white">
+                                <td class="py-2.5 text-center cursor-pointer" onclick="toggleRow('row1')">
+                                    <i id="icon-row1" class="fa-solid fa-circle-plus text-[#8cc63f] text-lg"></i>
+                                </td>
+                                <td class="py-2.5 px-2 text-center text-[#333]">USD</td>
+                                <td class="py-2.5 px-2 text-center text-[#333]">Refferal</td>
+                            </tr>
+                            <tr id="detail-row1" class="hidden bg-white border-b border-gray-200 expanded-content">
+                                <td colspan="3">
+                                    <div class="detail-row">
+                                        <div class="detail-label">Commission group name:</div>
+                                        <div id="referralCommissionGroup" class="detail-value">—</div>
+                                    </div>
+                                    <div class="detail-row">
+                                        <div class="detail-label">Start date:</div>
+                                        <div id="referralStartDate" class="detail-value">—</div>
+                                    </div>
+                                    <div class="detail-row">
+                                        <div class="detail-label">Description:</div>
+                                        <div id="referralDescription" class="detail-value">—</div>
+                                    </div>
+                                    <div class="detail-row border-none">
+                                        <div class="detail-label">End date:</div>
+                                        <div class="detail-value"></div>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Row 2: Revenue Share -->
+                            <tr class="bg-[#f3f4f6] border-b border-white">
+                                <td class="py-2.5 text-center cursor-pointer" onclick="toggleRow('row2')">
+                                    <i id="icon-row2" class="fa-solid fa-circle-plus text-[#8cc63f] text-lg"></i>
+                                </td>
+                                <td class="py-2.5 px-2 text-center text-[#333]">USD</td>
+                                <td class="py-2.5 px-2 text-center text-[#333]">Revenue Share</td>
+                            </tr>
+                            <tr id="detail-row2" class="hidden bg-white border-b border-gray-200 expanded-content">
+                                <td colspan="3">
+                                    <div class="detail-row">
+                                        <div class="detail-label">Commission group name:</div>
+                                        <div id="revenueCommissionGroup" class="detail-value">—</div>
+                                    </div>
+                                    <div class="detail-row">
+                                        <div class="detail-label">Start date:</div>
+                                        <div id="revenueStartDate" class="detail-value">—</div>
+                                    </div>
+                                    <div class="detail-row">
+                                        <div class="detail-label">Description:</div>
+                                        <div id="revenueDescription" class="detail-value">—</div>
+                                    </div>
+                                    <div class="detail-row border-none">
+                                        <div class="detail-label">End date:</div>
+                                        <div class="detail-value"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Footer Pagination -->
+                <div class="mt-4">
+                    <p class="text-[13px] text-[#888] mb-2">Records from 1 to 2 (2 records in total)</p>
+                    <div class="flex gap-1 mb-3">
+                        <button class="w-8 h-8 flex items-center justify-center bg-[#f2f3f7] text-gray-400 cursor-not-allowed">
+                            <i class="fa-solid fa-chevron-left text-[11px]"></i>
+                        </button>
+                        <button class="w-8 h-8 flex items-center justify-center bg-[#8cc63f] text-white font-medium">
+                            1
+                        </button>
+                        <button class="w-8 h-8 flex items-center justify-center bg-[#f2f3f7] text-gray-400 cursor-not-allowed">
+                            <i class="fa-solid fa-chevron-right text-[11px]"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Page Size Dropdown -->
+                    <div class="w-16">
+                        <div class="relative">
+                            <select class="w-full appearance-none bg-white border border-gray-200 text-[#333] text-[14px] px-2 py-1.5 pr-6 focus:outline-none">
+                                <option selected>10</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-gray-400">
+                                <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Affiliate Links Content View -->
+        <section id="affiliateLinksView" class="hidden max-w-lg mx-auto bg-white min-h-[calc(100vh-60px)] p-4">
+            <div class="bg-white border border-gray-200 shadow-sm p-3">
+                
+                <!-- Created Links / Hidden Links Tabs -->
+                <div class="tab-bar">
+                    <button id="tabCreatedLinks" type="button" onclick="switchAffiliateTab('created')" class="tab-btn active-tab">
+                        CREATED LINKS
+                    </button>
+                    <button id="tabHiddenLinks" type="button" onclick="switchAffiliateTab('hidden')" class="tab-btn inactive-tab">
+                        HIDDEN LINKS
+                    </button>
+                </div>
+
+                <!-- Dropdown Top -->
+                <div class="mb-4 w-48">
+                    <div class="relative">
+                        <select class="w-full appearance-none bg-[#f2f3f7] border-none text-[#333] text-[14px] px-3 py-2 pr-8 focus:outline-none">
+                            <option selected>8 items selected</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                            <i class="fa-solid fa-chevron-down text-[11px]"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="w-full overflow-x-auto">
+                    <table class="w-full comm-table text-left border-collapse">
+                        <thead>
+                            <tr class="bg-[#1a1a1a] text-white text-[13px]">
+                                <th class="w-10 py-3 text-center"></th>
+                                <th class="py-3 px-2 font-semibold">
+                                    <div class="flex justify-between items-center gap-1">
+                                        <span>No.</span>
+                                        <i class="fa-solid fa-arrow-up-wide-short text-[11px] text-gray-300"></i>
+                                    </div>
+                                </th>
+                                <th class="py-3 px-2 font-semibold">
+                                    <div class="flex justify-between items-center gap-1">
+                                        <span>Website</span>
+                                        <i class="fa-solid fa-arrows-up-down text-[11px] text-gray-300"></i>
+                                    </div>
+                                </th>
+                                <th class="py-3 px-2 font-semibold">
+                                    <div class="flex justify-between items-center gap-1">
+                                        <span>Show/Hide</span>
+                                        <i class="fa-solid fa-arrows-up-down text-[11px] text-gray-300"></i>
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="affiliateLinksTableBody" class="text-[14px]">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Footer Pagination -->
+                <div class="mt-4">
+                    <p id="affiliateRecordsCount" class="text-[13px] text-[#888] mb-2">Records from 1 to 2 (2 records in total)</p>
+                    <div class="flex gap-1 mb-3">
+                        <button class="w-8 h-8 flex items-center justify-center bg-[#f2f3f7] text-gray-400 cursor-not-allowed">
+                            <i class="fa-solid fa-chevron-left text-[11px]"></i>
+                        </button>
+                        <button class="w-8 h-8 flex items-center justify-center bg-[#8cc63f] text-white font-medium">
+                            1
+                        </button>
+                        <button class="w-8 h-8 flex items-center justify-center bg-[#f2f3f7] text-gray-400 cursor-not-allowed">
+                            <i class="fa-solid fa-chevron-right text-[11px]"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Page Size Dropdown -->
+                    <div class="w-16">
+                        <div class="relative">
+                            <select class="w-full appearance-none bg-white border border-gray-200 text-[#333] text-[14px] px-2 py-1.5 pr-6 focus:outline-none">
+                                <option selected>10</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-gray-400">
+                                <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Promo Codes Content View -->
+        <section id="promoCodesView" class="hidden max-w-lg mx-auto bg-white min-h-[calc(100vh-60px)] p-4">
+            <div class="bg-white border border-gray-200 shadow-sm p-3">
+                <!-- Dropdown Top -->
+                <div class="mb-4 w-48">
+                    <div class="relative">
+                        <select class="w-full appearance-none bg-[#f2f3f7] border-none text-[#333] text-[14px] px-3 py-2 pr-8 focus:outline-none">
+                            <option selected>5 items selected</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                            <i class="fa-solid fa-chevron-down text-[11px]"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="w-full overflow-x-auto">
+                    <table class="w-full comm-table text-left border-collapse">
+                        <thead>
+                            <tr class="bg-[#1a1a1a] text-white text-[13px]">
+                                <th class="w-12 py-3 text-center"></th>
+                                <th class="py-3 px-3 font-semibold">
+                                    <div class="flex justify-between items-center">
+                                        <span class="mx-auto">ID</span>
+                                        <i class="fa-solid fa-arrow-up-wide-short text-[11px] text-gray-300"></i>
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-[14px]">
+                            <!-- Promo Code Row -->
+                            <tr class="bg-[#f3f4f6] border-b border-white">
+                                <td class="py-3 text-center cursor-pointer border-r border-white" onclick="toggleRow('promo1')">
+                                    <i id="icon-promo1" class="fa-solid fa-circle-plus text-[#8cc63f] text-lg"></i>
+                                </td>
+                                <td id="promoRowId" class="py-3 px-2 text-center text-[#333]">11856677</td>
+                            </tr>
+                            <tr id="detail-promo1" class="hidden bg-white border-b border-gray-200 expanded-content">
+                                <td colspan="2">
+                                    <div class="detail-row">
+                                        <div class="detail-label">Website:</div>
+                                        <div class="detail-value">1xPartners.com</div>
+                                    </div>
+                                    <div class="detail-row">
+                                        <div class="detail-label">Currency:</div>
+                                        <div class="detail-value">USD</div>
+                                    </div>
+                                    <div class="detail-row">
+                                        <div class="detail-label">Promo code:</div>
+                                        <div class="detail-value flex items-center gap-2">
+                                            <span id="userPromoCodeDisplay" class="font-medium text-[#111]">—</span>
+                                            <button type="button" onclick="copyTextFromElement('userPromoCodeDisplay', this)" class="bg-[#8cc63f] hover:bg-[#7ebd34] w-7 h-7 flex items-center justify-center text-[#111] transition" title="Copy Promo Code">
+                                                <i class="fa-regular fa-copy text-sm"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="detail-row border-none">
+                                        <div class="detail-label">BTAG:</div>
+                                        <div class="detail-value">
+                                            <div id="userBtagDisplay" class="mb-1.5">d_5883578m_64485c_—</div>
+                                            <button type="button" onclick="copyTextFromElement('userBtagDisplay', this)" class="bg-[#8cc63f] hover:bg-[#7ebd34] w-7 h-7 flex items-center justify-center text-[#111] transition" title="Copy BTAG">
+                                                <i class="fa-regular fa-copy text-sm"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Footer Pagination -->
+                <div class="mt-4">
+                    <p class="text-[13px] text-[#888] mb-2">Records from 1 to 1 (1 records in total)</p>
+                    <div class="flex gap-1 mb-3">
+                        <button class="w-8 h-8 flex items-center justify-center bg-[#f2f3f7] text-gray-400 cursor-not-allowed">
+                            <i class="fa-solid fa-chevron-left text-[11px]"></i>
+                        </button>
+                        <button class="w-8 h-8 flex items-center justify-center bg-[#8cc63f] text-white font-medium">
+                            1
+                        </button>
+                        <button class="w-8 h-8 flex items-center justify-center bg-[#f2f3f7] text-gray-400 cursor-not-allowed">
+                            <i class="fa-solid fa-chevron-right text-[11px]"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Page Size Dropdown -->
+                    <div class="w-16">
+                        <div class="relative">
+                            <select class="w-full appearance-none bg-white border border-gray-200 text-[#333] text-[14px] px-2 py-1.5 pr-6 focus:outline-none">
+                                <option selected>10</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-gray-400">
+                                <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Player Report Content View -->
+        <section id="playerReportView" class="hidden max-w-lg mx-auto bg-[#f7f7f7] min-h-[calc(100vh-60px)] p-4">
+            <div class="bg-white border border-gray-200 shadow-sm p-4">
+                <h1 class="text-lg font-semibold text-[#222] mb-1">Player report</h1>
+                <p class="text-sm text-gray-500 mb-4">Submit a player ID for admin review.</p>
+                <form id="playerReportForm" class="flex gap-2">
+                    <input id="playerIdInput" type="text" required maxlength="100" placeholder="Enter player ID"
+                        class="min-w-0 flex-1 border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-[#8cc63f]">
+                    <button id="playerIdSubmitBtn" type="submit" class="bg-[#84d000] hover:bg-[#78bd00] px-4 py-2 text-sm font-semibold text-[#111]">SUBMIT</button>
+                </form>
+                <p id="playerReportMessage" role="status" class="hidden mt-3 text-sm"></p>
+            </div>
+            <div class="mt-4 bg-white border border-gray-200 shadow-sm p-4">
+                <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-3">
+                    <h2 class="font-semibold text-[#222]">Submitted player IDs</h2>
+                    <span id="playerReportCount" class="rounded-full bg-[#f2f3f7] px-3 py-1 text-sm font-semibold text-[#333]">0</span>
+                </div>
+                <div id="playerReportCards" class="space-y-3">
+                    <p class="text-sm text-gray-500">No player IDs submitted yet.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Profile / Account Content View -->
+        <section id="profileView" class="hidden max-w-lg mx-auto bg-[#f7f7f7] min-h-[calc(100vh-60px)] pb-8">
+            <!-- User Header Bar -->
+            <div class="bg-white px-4 py-3 border-b border-gray-200 text-[15px]">
+                <span class="font-bold text-black">User:</span>
+                <span id="profileHeaderUsername" class="font-bold text-[#8cc63f] ml-1">kavishka997</span>
+            </div>
+
+            <div class="px-3 pt-3 space-y-3">
+                <!-- Contact Information Card -->
+                <div class="bg-white border border-gray-200/80 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
+                    <h2 class="text-[18px] font-normal text-[#222222] mb-4">Contact information</h2>
+
+                    <div class="space-y-3.5">
+                        <div>
+                            <label class="block text-[14px] text-[#444444] mb-1.5">First name *</label>
+                            <input type="text" id="profileFirstName" value="" disabled class="w-full bg-[#d9dde2] border border-[#c5c9ce] text-[#222222] text-[15px] px-3 py-2 rounded-none focus:outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-[14px] text-[#444444] mb-1.5">Last name *</label>
+                            <input type="text" id="profileLastName" value="" disabled class="w-full bg-[#d9dde2] border border-[#c5c9ce] text-[#222222] text-[15px] px-3 py-2 rounded-none focus:outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-[14px] text-[#444444] mb-1.5">Phone number</label>
+                            <input type="text" id="profilePhone" value="" disabled class="w-full bg-[#d9dde2] border border-[#c5c9ce] text-[#222222] text-[15px] px-3 py-2 rounded-none focus:outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-[14px] text-[#444444] mb-1.5">Messenger</label>
+                            <div class="w-full bg-[#d9dde2] border border-[#c5c9ce] text-[#555555] text-[15px] px-3 py-2 flex justify-between items-center">
+                                <span>Telegram</span>
+                                <div class="flex items-center pl-2.5 border-l border-gray-400/50 text-gray-500 text-xs">
+                                    <i class="fa-solid fa-chevron-down"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[14px] text-[#444444] mb-1.5">Username</label>
+                            <input type="text" id="profileUsername" value="" disabled class="w-full bg-[#d9dde2] border border-[#c5c9ce] text-[#222222] text-[15px] px-3 py-2 rounded-none focus:outline-none">
+                        </div>
+
+                        <p class="text-[13.5px] text-[#444444] pt-0.5 pb-0.5">
+                            to edit contact details, please contact your manager
+                        </p>
+
+                        <div>
+                            <label class="block text-[14px] text-[#444444] mb-1.5">Country</label>
+                            <div class="relative">
+                                <select class="w-full appearance-none bg-white border border-[#cccccc] text-[#333333] text-[15px] px-3 py-2 pr-10 rounded-none focus:outline-none">
+                                    <option selected>Sri Lanka</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                                    <span class="h-5 border-l border-gray-300 mr-2.5"></span>
+                                    <i class="fa-solid fa-chevron-down text-xs text-gray-400"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[14px] text-[#444444] mb-1.5">Notifications language</label>
+                            <div class="relative">
+                                <select class="w-full appearance-none bg-white border border-[#cccccc] text-[#333333] text-[15px] px-3 py-2 pr-10 rounded-none focus:outline-none">
+                                    <option selected>English</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                                    <span class="h-5 border-l border-gray-300 mr-2.5"></span>
+                                    <i class="fa-solid fa-chevron-down text-xs text-gray-400"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-1">
+                            <button type="button" class="w-full bg-[#84d000] hover:bg-[#78bd00] text-[#111111] text-[13.5px] font-medium py-2.5 uppercase tracking-normal">
+                                SAVE CHANGES
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Details Card -->
+                <div class="bg-white border border-gray-200/80 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
+                    <h2 class="text-[18px] font-normal text-[#222222] mb-4">Payment details</h2>
+
+                    <div class="space-y-3.5">
+                        <div>
+                            <label class="block text-[14px] text-[#444444] mb-1.5">Preferred payment method:</label>
+                            <input type="text" value="Player account" disabled class="w-full bg-[#d9dde2] border border-[#c5c9ce] text-[#222222] text-[15px] px-3 py-2 rounded-none focus:outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-[14px] text-[#444444] mb-1.5">User account</label>
+                            <input type="text" id="profilePlayerAccount" value="" disabled class="w-full bg-[#d9dde2] border border-[#c5c9ce] text-[#222222] text-[15px] px-3 py-2 rounded-none focus:outline-none">
+                        </div>
+
+                        <p class="text-[13.5px] text-[#444444] pt-0.5 leading-snug">
+                            * to change your payment details, please contact Partner Support.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Change Password Card -->
+                <div class="bg-white border border-gray-200/80 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
+                    <h2 class="text-[18px] font-normal text-[#222222] mb-4">Change password</h2>
+
+                    <div class="space-y-3.5">
+                        <div>
+                            <label class="block text-[14px] text-[#444444] mb-1.5">Old password</label>
+                            <input type="password" class="w-full bg-white border border-[#cccccc] text-[#222222] text-[15px] px-3 py-2 rounded-none focus:outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-[14px] text-[#444444] mb-1.5">New password</label>
+                            <input type="password" class="w-full bg-white border border-[#cccccc] text-[#222222] text-[15px] px-3 py-2 rounded-none focus:outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-[14px] text-[#444444] mb-1.5">Re-enter new password</label>
+                            <input type="password" class="w-full bg-white border border-[#cccccc] text-[#222222] text-[15px] px-3 py-2 rounded-none focus:outline-none">
+                        </div>
+
+                        <div class="pt-1">
+                            <button type="button" class="w-full bg-[#84d000] hover:bg-[#78bd00] text-[#111111] text-[13.5px] font-medium py-2.5 uppercase tracking-normal">
+                                CHANGE PASSWORD
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subscriptions Card -->
+                <div class="bg-white border border-gray-200/80 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
+                    <h2 class="text-[18px] font-normal text-[#222222] mb-3.5">Subscriptions</h2>
+
+                    <div class="space-y-2.5 mb-4">
+                        <label class="flex items-center gap-2.5 text-[14px] text-[#444444] cursor-pointer">
+                            <input type="checkbox" class="w-4 h-4 border border-gray-300 rounded-none accent-[#84d000]">
+                            <span>Affiliate program news</span>
+                        </label>
+
+                        <label class="flex items-center gap-2.5 text-[14px] text-[#444444] cursor-pointer">
+                            <input type="checkbox" class="w-4 h-4 border border-gray-300 rounded-none accent-[#84d000]">
+                            <span>Promotions and promo materials</span>
+                        </label>
+                    </div>
+
+                    <button type="button" class="w-full bg-[#84d000] hover:bg-[#78bd00] text-[#111111] text-[13.5px] font-medium py-2.5 uppercase tracking-normal">
+                        SAVE
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://vtobhkwzvwaaxxtikxfq.supabase.co';
+        const SUPABASE_PUBLIC_KEY = 'sb_publishable_839dZUvDqZvNy9n5HtIttA_Nz3cWsdn';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLIC_KEY);
+
+        // Login Elements
+        const loginScreen = document.getElementById('loginScreen');
+        const appWrapper = document.getElementById('appWrapper');
+        const loginForm = document.getElementById('loginForm');
+        const loginUsername = document.getElementById('loginUsername');
+        const loginPassword = document.getElementById('loginPassword');
+        const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+        const loginError = document.getElementById('loginError');
+
+        // Profile Form Elements
+        const profileHeaderUsername = document.getElementById('profileHeaderUsername');
+        const profileFirstName = document.getElementById('profileFirstName');
+        const profileLastName = document.getElementById('profileLastName');
+        const profilePhone = document.getElementById('profilePhone');
+        const profileUsername = document.getElementById('profileUsername');
+        const profilePlayerAccount = document.getElementById('profilePlayerAccount');
+        const playerReportForm = document.getElementById('playerReportForm');
+        const playerIdInput = document.getElementById('playerIdInput');
+        const playerIdSubmitBtn = document.getElementById('playerIdSubmitBtn');
+        const playerReportMessage = document.getElementById('playerReportMessage');
+        const playerReportCount = document.getElementById('playerReportCount');
+        const playerReportCards = document.getElementById('playerReportCards');
+
+        // Affiliate Links State (2 Cards Only)
+        let currentAffiliateTab = 'created';
+        const defaultAffiliateLinks = [
+            {
+                id: 'aff1',
+                noTop: '682571',
+                noBottom: '3',
+                website: '1xPartners.com',
+                campaign: 'Registration Link',
+                generatedLink: 'https://reffpa.com/L?tag=d_6094460m_97c_5years&site=6094460&ad=97&r=bonus/rules/5-years',
+                currency: 'USD',
+                hidden: false,
+                expanded: false
+            },
+            {
+                id: 'aff2',
+                noTop: '683917',
+                noBottom: '7',
+                website: '1xPartners.com',
+                campaign: 'Apk Download',
+                generatedLink: 'https://reffpa.com/L?tag=d_5572400m_70865c_&site=5572400&ad=70865',
+                currency: 'USD',
+                hidden: false,
+                expanded: false
+            }
+        ];
+
+        let affiliateLinksData = JSON.parse(localStorage.getItem('affiliateLinksState') || 'null') || defaultAffiliateLinks;
+
+        function saveAffiliateLinksState() {
+            localStorage.setItem('affiliateLinksState', JSON.stringify(affiliateLinksData));
+        }
+
+        function renderAffiliateLinks() {
+            const tbody = document.getElementById('affiliateLinksTableBody');
+            const recordsCountEl = document.getElementById('affiliateRecordsCount');
+            const isHiddenTab = currentAffiliateTab === 'hidden';
+            const filteredLinks = affiliateLinksData.filter(item => item.hidden === isHiddenTab);
+
+            tbody.innerHTML = '';
+
+            if (filteredLinks.length === 0) {
+                tbody.innerHTML = `
+                    <tr class="bg-[#f3f4f6] border-b border-white">
+                        <td colspan="4" class="py-5 text-center text-gray-500 text-[13px]">No records found</td>
+                    </tr>
+                `;
+                recordsCountEl.textContent = 'Records from 0 to 0 (0 records in total)';
+                return;
+            }
+
+            filteredLinks.forEach(item => {
+                const iconClass = item.expanded
+                    ? 'fa-solid fa-circle-minus text-[#6b5296]'
+                    : 'fa-solid fa-circle-plus text-[#8cc63f]';
+                const detailHiddenClass = item.expanded ? '' : 'hidden';
+                const actionLabel = item.hidden ? 'UNHIDE' : 'HIDE';
+                const eyeIcon = item.hidden ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+
+                const mainTr = document.createElement('tr');
+                mainTr.className = 'bg-[#f3f4f6] border-b border-white';
+                mainTr.innerHTML = `
+                    <td class="py-3 text-center cursor-pointer border-r border-white" onclick="toggleAffiliateExpand('${item.id}')">
+                        <i class="${iconClass} text-lg"></i>
+                    </td>
+                    <td class="py-3 px-2.5 text-[#333] leading-tight border-r border-white">
+                        <div>${item.noTop}</div>
+                        <div>${item.noBottom}</div>
+                    </td>
+                    <td class="py-3 px-2.5 text-[#333] border-r border-white break-all">${item.website}</td>
+                    <td class="py-2.5 px-2 text-center">
+                        <button type="button" onclick="toggleAffiliateHide('${item.id}')" class="bg-[#8cc63f] hover:bg-[#7ebd34] text-[#111] w-full py-2 px-2 flex flex-col items-center justify-center gap-0.5 text-[12px] font-medium transition">
+                            <i class="${eyeIcon} text-sm"></i>
+                            <span>${actionLabel}</span>
+                        </button>
+                    </td>
+                `;
+
+                const detailTr = document.createElement('tr');
+                detailTr.className = `${detailHiddenClass} bg-white border-b border-gray-200 expanded-content`;
+                detailTr.innerHTML = `
+                    <td colspan="4">
+                        <div class="detail-row">
+                            <div class="detail-label">Landing page:</div>
+                            <div class="detail-value"></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">SubID:</div>
+                            <div class="detail-value"></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Campaign:</div>
+                            <div class="detail-value">${item.campaign}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Generated link:</div>
+                            <div class="detail-value">
+                                <div id="link-text-${item.id}" class="text-[#8cc63f] mb-1.5">${item.generatedLink}</div>
+                                <button type="button" onclick="copyTextDirect('${item.generatedLink}', this)" class="bg-[#8cc63f] hover:bg-[#7ebd34] w-7 h-7 flex items-center justify-center text-[#111] transition" title="Copy Referral Link">
+                                    <i class="fa-regular fa-copy text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="detail-row border-none">
+                            <div class="detail-label">Currency:</div>
+                            <div class="detail-value">${item.currency}</div>
+                        </div>
+                    </td>
+                `;
+
+                tbody.appendChild(mainTr);
+                tbody.appendChild(detailTr);
+            });
+
+            recordsCountEl.textContent = `Records from 1 to ${filteredLinks.length} (${filteredLinks.length} records in total)`;
+        }
+
+        function toggleAffiliateExpand(id) {
+            const item = affiliateLinksData.find(x => x.id === id);
+            if (item) {
+                item.expanded = !item.expanded;
+                saveAffiliateLinksState();
+                renderAffiliateLinks();
+            }
+        }
+
+        function toggleAffiliateHide(id) {
+            const item = affiliateLinksData.find(x => x.id === id);
+            if (item) {
+                item.hidden = !item.hidden;
+                item.expanded = false;
+                saveAffiliateLinksState();
+                renderAffiliateLinks();
+            }
+        }
+
+        function switchAffiliateTab(tab) {
+            currentAffiliateTab = tab;
+            const tabCreated = document.getElementById('tabCreatedLinks');
+            const tabHidden = document.getElementById('tabHiddenLinks');
+
+            if (tab === 'created') {
+                tabCreated.className = 'tab-btn active-tab';
+                tabHidden.className = 'tab-btn inactive-tab';
+            } else {
+                tabCreated.className = 'tab-btn inactive-tab';
+                tabHidden.className = 'tab-btn active-tab-right';
+            }
+            renderAffiliateLinks();
+        }
+
+        // Copy Helper Functions
+        function copyTextDirect(text, btnElement) {
+            if (!text || text === '—') return;
+            navigator.clipboard.writeText(text).then(() => {
+                showCopyFeedback(btnElement);
+            });
+        }
+
+        function copyTextFromElement(elementId, btnElement) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            const text = el.textContent.trim();
+            if (!text || text === '—') return;
+            navigator.clipboard.writeText(text).then(() => {
+                showCopyFeedback(btnElement);
+            });
+        }
+
+        function showCopyFeedback(btnElement) {
+            const icon = btnElement.querySelector('i');
+            if (!icon) return;
+            const originalClass = icon.className;
+            icon.className = 'fa-solid fa-check text-sm';
+            setTimeout(() => {
+                icon.className = originalClass;
+            }, 1200);
+        }
+
+        // Populate User Data into Profile, Commission, and Promo Code pages
+        function getUserValue(user, keys) {
+            for (const key of keys) {
+                if (user[key] !== undefined && user[key] !== null && user[key] !== '') {
+                    return user[key];
+                }
+            }
+            return '';
+        }
+
+        function getCommissionValue(user) {
+            const value = getUserValue(user, [
+                'commission_percentage', 'commission_percent', 'commission_rate',
+                'revenue_share_percentage', 'revenue_share_rate', 'commission_stage_percentage',
+                'revenue_share_stage_percentage', 'stage_commission_percentage', 'commission'
+            ]);
+            if (value === '' || value === '—') return '—';
+            const text = String(value).trim();
+            return text.endsWith('%') ? text : `${text}%`;
+        }
+
+        function getAccountCreatedDate(user) {
+            const value = getUserValue(user, ['created_at', 'created_on', 'created_date', 'date_created']);
+            return value ? String(value).split('T')[0] : '—';
+        }
+
+        function getPromoCodeValue(user) {
+            const value = getUserValue(user, [
+                'promo_code', 'promocode', 'promo', 'affiliate_promo_code', 'user_promo_code', 'code'
+            ]);
+            return value ? String(value).trim() : '—';
+        }
+
+        function populateUserProfile(user) {
+            profileHeaderUsername.textContent = user.username || '';
+            profileFirstName.value = user.first_name || '';
+            profileLastName.value = user.last_name || '';
+            profilePhone.value = user.phone_number || '';
+            profileUsername.value = user.username || '';
+            profilePlayerAccount.value = user.player_account || '';
+
+            const commission = getCommissionValue(user);
+            const createdDate = getAccountCreatedDate(user);
+            const formatPercent = value => {
+                const text = String(value).trim();
+                return text.endsWith('%') ? text : `${text}%`;
+            };
+            const groupName = getUserValue(user, ['commission_group_name', 'commission_group']) || (commission === '—' ? '25%' : commission);
+            const startDate = getUserValue(user, ['commission_start_date', 'commission_started_at', 'start_date']) || createdDate;
+            const referralRate = formatPercent(getUserValue(user, ['referral_percentage', 'referral_rate', 'referral_commission']) || '5');
+            const revenueRate = formatPercent(getUserValue(user, ['revenue_share_percentage', 'revenue_share_rate', 'commission_percentage']) || (commission === '—' ? '25' : commission));
+            const negativeCommission = getUserValue(user, ['negative_commission', 'negative_commission_enabled']) || 'Yes';
+            const descriptionDate = getUserValue(user, ['commission_description_date', 'commission_effective_date']) || '2023-06-23';
+            const administratorRate = formatPercent(getUserValue(user, ['administrator_percentage', 'administrator_rate']) || '0');
+            const calculationType = getUserValue(user, ['mlm_calculation_type', 'calculation_type']) || 'Revenue';
+
+            document.getElementById('referralCommissionGroup').textContent = groupName;
+            document.getElementById('revenueCommissionGroup').textContent = groupName;
+            document.getElementById('referralStartDate').textContent = startDate;
+            document.getElementById('revenueStartDate').textContent = startDate;
+            document.getElementById('referralDescription').textContent = `Level 1 ${referralRate}; Negative commission: ${negativeCommission}; (${descriptionDate})`;
+            document.getElementById('revenueDescription').textContent = `Commission percentage: ${revenueRate}; Negative commission: ${negativeCommission}; Administrator: ${administratorRate}; MLM calculation type: ${calculationType}; (${descriptionDate})`;
+
+            // Populate Promo Code Data added by Admin
+            const promoCode = getPromoCodeValue(user);
+            const customBtag = getUserValue(user, ['btag', 'promo_btag']);
+            const btagValue = customBtag || (promoCode !== '—' ? `d_5883578m_64485c_${promoCode}` : '—');
+            
+            document.getElementById('userPromoCodeDisplay').textContent = promoCode;
+            document.getElementById('userBtagDisplay').textContent = btagValue;
+        }
+
+        function saveUserProfile(user) {
+            const profile = {
+                ...user,
+                id: user.id,
+                username: user.username || '',
+                first_name: user.first_name || '',
+                last_name: user.last_name || '',
+                phone_number: user.phone_number || '',
+                player_account: user.player_account || '',
+                commission_percentage: getCommissionValue(user),
+                created_at: getAccountCreatedDate(user),
+                promo_code: getPromoCodeValue(user)
+            };
+            delete profile.password;
+            localStorage.setItem('partnerProfile', JSON.stringify(profile));
+            populateUserProfile(profile);
+        }
+
+        async function refreshUserProfile() {
+            let cachedUser;
+            try {
+                cachedUser = JSON.parse(localStorage.getItem('partnerProfile') || 'null');
+            } catch {
+                return;
+            }
+            if (!cachedUser?.username) return;
+
+            let query = supabaseClient.from('partner_accounts').select('*');
+            query = cachedUser.id
+                ? query.eq('id', cachedUser.id)
+                : query.ilike('username', cachedUser.username);
+            const { data, error } = await query.limit(1);
+            if (error) return;
+
+            let currentUser;
+            try {
+                currentUser = JSON.parse(localStorage.getItem('partnerProfile') || 'null');
+            } catch {
+                currentUser = null;
+            }
+            const isCurrentSession = currentUser && (cachedUser.id
+                ? currentUser.id === cachedUser.id
+                : currentUser.username === cachedUser.username);
+            if (!isCurrentSession) return;
+
+            if (!data || data.length === 0) {
+                endPartnerSession();
+                return;
+            }
+
+            saveUserProfile(data[0]);
+        }
+
+        const homeAdjustmentMetrics = [
+            'available_to_withdraw', 'yesterday', 'current_month', 'days_30', 'total'
+        ];
+
+        async function refreshHomeAdjustments() {
+            let user;
+            try {
+                user = JSON.parse(localStorage.getItem('partnerProfile') || 'null');
+            } catch {
+                return;
+            }
+            if (!user?.username) return;
+
+            const affiliateId = getUserValue(user, ['aff_id', 'affiliate_id', 'affiliateId']) || user.username;
+            const { data, error } = await supabaseClient
+                .from('partner_home_adjustments')
+                .select('metric, amount')
+                .eq('aff_id', String(affiliateId));
+            if (error) return;
+
+            let currentUser;
+            try {
+                currentUser = JSON.parse(localStorage.getItem('partnerProfile') || 'null');
+            } catch {
+                currentUser = null;
+            }
+            if (!currentUser || currentUser.username !== user.username) return;
+
+            const totals = Object.fromEntries(homeAdjustmentMetrics.map(metric => [metric, 0]));
+            (data || []).forEach(row => {
+                if (Object.hasOwn(totals, row.metric)) totals[row.metric] += Number(row.amount) || 0;
+            });
+            homeAdjustmentMetrics.forEach(metric => {
+                const value = document.getElementById(`home-${metric}`);
+                if (value) value.textContent = new Intl.NumberFormat('en-US', {
+                    style: 'currency', currency: 'USD'
+                }).format(totals[metric]);
+            });
+        }
+
+        // Handle Login Submit
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            loginError.classList.add('hidden');
+            loginSubmitBtn.disabled = true;
+            loginSubmitBtn.textContent = 'LOGGING IN...';
+
+            const enteredUsername = loginUsername.value.trim();
+            const enteredPassword = loginPassword.value.trim();
+
+            const { data, error } = await supabaseClient
+                .from('partner_accounts')
+                .select('*')
+                .ilike('username', enteredUsername)
+                .eq('password', enteredPassword)
+                .limit(1);
+
+            loginSubmitBtn.disabled = false;
+            loginSubmitBtn.textContent = 'LOGIN';
+
+            if (error || !data || data.length === 0) {
+                loginError.textContent = 'Invalid username or password';
+                loginError.classList.remove('hidden');
+                return;
+            }
+
+            const loggedInUser = data[0];
+            saveUserProfile(loggedInUser);
+
+            // Hide Login Screen and Show Partner App
+            loginScreen.classList.add('hidden');
+            appWrapper.classList.remove('hidden');
+            showDashboardPage();
+        });
+
+        // Navigation & Menu Logic
+        const menuOpenBtn = document.getElementById('menuOpenBtn');
+        const menuCloseBtn = document.getElementById('menuCloseBtn');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const sidebarMenu = document.getElementById('sidebarMenu');
+        const sidebarContainer = document.getElementById('sidebarContainer');
+
+        const profileBtn = document.getElementById('profileBtn');
+        const logoBtn = document.getElementById('logoBtn');
+        
+        // Navigation Buttons
+        const navMainPage = document.getElementById('navMainPage');
+        const navSummaryPage = document.getElementById('navSummaryPage');
+        const navCommissionPage = document.getElementById('navCommissionPage');
+        const navAccountPage = document.getElementById('navAccountPage');
+        const navAffiliateLinksPage = document.getElementById('navAffiliateLinksPage');
+        const navPromoCodesPage = document.getElementById('navPromoCodesPage');
+        const navPlayerReportPage = document.getElementById('navPlayerReportPage');
+        
+        // Views
+        const dashboardView = document.getElementById('dashboardView');
+        const summaryView = document.getElementById('summaryView');
+        const commissionView = document.getElementById('commissionView');
+        const affiliateLinksView = document.getElementById('affiliateLinksView');
+        const promoCodesView = document.getElementById('promoCodesView');
+        const playerReportView = document.getElementById('playerReportView');
+        const profileView = document.getElementById('profileView');
+
+        function openMenu() {
+            sidebarContainer.classList.remove('hidden');
+            setTimeout(() => {
+                menuOverlay.classList.remove('opacity-0');
+                menuCloseBtn.classList.remove('opacity-0');
+                sidebarMenu.classList.remove('translate-x-full');
+            }, 10);
+        }
+
+        function closeMenu() {
+            menuOverlay.classList.add('opacity-0');
+            menuCloseBtn.classList.add('opacity-0');
+            sidebarMenu.classList.add('translate-x-full');
+            setTimeout(() => {
+                sidebarContainer.classList.add('hidden');
+            }, 300);
+        }
+
+        function endPartnerSession() {
+            localStorage.removeItem('partnerProfile');
+            appWrapper.classList.add('hidden');
+            loginScreen.classList.remove('hidden');
+            loginForm.reset();
+            loginError.classList.add('hidden');
+            closeMenu();
+            showDashboardPage();
+        }
+
+        // Reset Menu Colors
+        function resetNavColors() {
+            const navItems = [navMainPage, navSummaryPage, navCommissionPage, navAccountPage, navAffiliateLinksPage, navPromoCodesPage, navPlayerReportPage];
+            navItems.forEach(nav => {
+                nav.classList.remove('text-[#8cc63f]', 'font-medium');
+                nav.classList.add('text-[#cccccc]');
+            });
+        }
+
+        function hideAllViews() {
+            dashboardView.classList.add('hidden');
+            summaryView.classList.add('hidden');
+            commissionView.classList.add('hidden');
+            affiliateLinksView.classList.add('hidden');
+            promoCodesView.classList.add('hidden');
+            playerReportView.classList.add('hidden');
+            profileView.classList.add('hidden');
+        }
+
+        function showProfilePage() {
+            hideAllViews();
+            resetNavColors();
+            profileView.classList.remove('hidden');
+            navAccountPage.classList.remove('text-[#cccccc]');
+            navAccountPage.classList.add('text-[#8cc63f]', 'font-medium');
+            window.scrollTo(0, 0);
+            refreshUserProfile();
+        }
+
+        function showDashboardPage() {
+            hideAllViews();
+            resetNavColors();
+            dashboardView.classList.remove('hidden');
+            navMainPage.classList.remove('text-[#cccccc]');
+            navMainPage.classList.add('text-[#8cc63f]', 'font-medium');
+            window.scrollTo(0, 0);
+            refreshHomeAdjustments();
+        }
+
+        function showSummaryPage() {
+            hideAllViews();
+            resetNavColors();
+            summaryView.classList.remove('hidden');
+            navSummaryPage.classList.remove('text-[#cccccc]');
+            navSummaryPage.classList.add('text-[#8cc63f]', 'font-medium');
+            window.scrollTo(0, 0);
+            loadSummaryAdjustments();
+        }
+        
+        function showCommissionPage() {
+            hideAllViews();
+            resetNavColors();
+            commissionView.classList.remove('hidden');
+            navCommissionPage.classList.remove('text-[#cccccc]');
+            navCommissionPage.classList.add('text-[#8cc63f]', 'font-medium');
+            window.scrollTo(0, 0);
+            refreshUserProfile();
+        }
+
+        function showAffiliateLinksPage() {
+            hideAllViews();
+            resetNavColors();
+            affiliateLinksView.classList.remove('hidden');
+            navAffiliateLinksPage.classList.remove('text-[#cccccc]');
+            navAffiliateLinksPage.classList.add('text-[#8cc63f]', 'font-medium');
+            renderAffiliateLinks();
+            window.scrollTo(0, 0);
+        }
+
+        function showPromoCodesPage() {
+            hideAllViews();
+            resetNavColors();
+            promoCodesView.classList.remove('hidden');
+            navPromoCodesPage.classList.remove('text-[#cccccc]');
+            navPromoCodesPage.classList.add('text-[#8cc63f]', 'font-medium');
+            window.scrollTo(0, 0);
+            refreshUserProfile();
+        }
+
+        function showPlayerReportPage() {
+            hideAllViews();
+            resetNavColors();
+            playerReportView.classList.remove('hidden');
+            navPlayerReportPage.classList.remove('text-[#cccccc]');
+            navPlayerReportPage.classList.add('text-[#8cc63f]', 'font-medium');
+            window.scrollTo(0, 0);
+            loadPlayerReports();
+        }
+
+        function setPlayerReportMessage(message, isError = false) {
+            playerReportMessage.textContent = message;
+            playerReportMessage.className = `mt-3 text-sm ${isError ? 'text-red-600' : 'text-green-700'}`;
+        }
+
+        function renderPlayerReports(reports) {
+            playerReportCount.textContent = reports.length;
+            playerReportCards.innerHTML = '';
+
+            if (!reports.length) {
+                playerReportCards.innerHTML = '<p class="text-sm text-gray-500">No player IDs submitted yet.</p>';
+                return;
+            }
+
+            reports.forEach(report => {
+                const status = String(report.status || 'pending').toLowerCase();
+                let indicator;
+                let statusText;
+                if (status === 'approved' || status === 'approve') {
+                    indicator = '<i class="fa-solid fa-circle-check text-green-600 text-xl" aria-label="Approved"></i>';
+                    statusText = 'APPROVED';
+                } else if (status === 'rejected' || status === 'reject') {
+                    indicator = '<span class="text-xs font-bold text-red-600">REJECTED</span>';
+                    statusText = 'REJECTED';
+                } else {
+                    indicator = '<span class="status-spinner" role="status" aria-label="Pending approval"></span>';
+                    statusText = 'PENDING';
+                }
+
+                const card = document.createElement('div');
+                card.className = 'flex items-center gap-3 border border-gray-200 bg-white p-3';
+                const statusIndicator = document.createElement('div');
+                statusIndicator.className = 'flex w-20 shrink-0 items-center justify-center';
+                statusIndicator.innerHTML = indicator;
+                const details = document.createElement('div');
+                details.className = 'min-w-0 flex-1';
+                const idText = document.createElement('p');
+                idText.className = 'break-all font-semibold text-[#222]';
+                idText.textContent = report.player_id;
+                const statusLabel = document.createElement('p');
+                statusLabel.className = `mt-1 text-[11px] font-semibold tracking-wide ${statusText === 'APPROVED' ? 'text-green-700' : statusText === 'REJECTED' ? 'text-red-600' : 'text-gray-500'}`;
+                statusLabel.textContent = statusText;
+                details.append(idText, statusLabel);
+                card.append(statusIndicator, details);
+                playerReportCards.appendChild(card);
+            });
+        }
+
+        async function loadPlayerReports() {
+            let user;
+            try {
+                user = JSON.parse(localStorage.getItem('partnerProfile') || 'null');
+            } catch {
+                user = null;
+            }
+            if (!user?.id) {
+                renderPlayerReports([]);
+                setPlayerReportMessage('Your account could not be identified. Please sign in again.', true);
+                return;
+            }
+
+            const { data, error } = await supabaseClient
+                .from('player_reports')
+                .select('id, partner_id, player_id, status, created_at')
+                .eq('partner_id', user.id)
+                .order('created_at', { ascending: false });
+            if (error) {
+                setPlayerReportMessage('Could not load player reports. Please check the player_reports table and its access policies.', true);
+                return;
+            }
+            playerReportMessage.classList.add('hidden');
+            renderPlayerReports(data || []);
+        }
+
+        // Toggle Table Rows Logic (Commission & Promo Code tables)
+        function toggleRow(rowId) {
+            const detailRow = document.getElementById('detail-' + rowId);
+            const icon = document.getElementById('icon-' + rowId);
+            
+            if (detailRow.classList.contains('hidden')) {
+                detailRow.classList.remove('hidden');
+                // Change icon to minus and purple
+                icon.classList.remove('fa-circle-plus', 'text-[#8cc63f]');
+                icon.classList.add('fa-circle-minus', 'text-[#6b5296]');
+            } else {
+                detailRow.classList.add('hidden');
+                // Change back to plus and green
+                icon.classList.remove('fa-circle-minus', 'text-[#6b5296]');
+                icon.classList.add('fa-circle-plus', 'text-[#8cc63f]');
+            }
+        }
+
+        // Initial render of Affiliate Links
+        renderAffiliateLinks();
+
+        // Restore the signed-in view after a page refresh
+        const storedUser = localStorage.getItem('partnerProfile');
+        if (storedUser) {
+            try {
+                const user = JSON.parse(storedUser);
+                if (user && user.username) {
+                    populateUserProfile(user);
+                    loginScreen.classList.add('hidden');
+                    appWrapper.classList.remove('hidden');
+                    showDashboardPage();
+                    refreshUserProfile();
+                } else {
+                    localStorage.removeItem('partnerProfile');
+                }
+            } catch {
+                localStorage.removeItem('partnerProfile');
+            }
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                refreshUserProfile();
+                refreshHomeAdjustments();
+            }
+        });
+
+        profileBtn.addEventListener('click', showProfilePage);
+        logoBtn.addEventListener('click', showDashboardPage);
+
+        navMainPage.addEventListener('click', (e) => {
+            e.preventDefault();
+            showDashboardPage();
+            closeMenu();
+        });
+
+        navSummaryPage.addEventListener('click', (e) => {
+            e.preventDefault();
+            showSummaryPage();
+            closeMenu();
+        });
+        
+        navCommissionPage.addEventListener('click', (e) => {
+            e.preventDefault();
+            showCommissionPage();
+            closeMenu();
+        });
+
+        navAffiliateLinksPage.addEventListener('click', (e) => {
+            e.preventDefault();
+            showAffiliateLinksPage();
+            closeMenu();
+        });
+
+        navPromoCodesPage.addEventListener('click', (e) => {
+            e.preventDefault();
+            showPromoCodesPage();
+            closeMenu();
+        });
+
+        navPlayerReportPage.addEventListener('click', (e) => {
+            e.preventDefault();
+            showPlayerReportPage();
+            closeMenu();
+        });
+
+        playerReportForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const playerId = playerIdInput.value.trim();
+            let user;
+            try {
+                user = JSON.parse(localStorage.getItem('partnerProfile') || 'null');
+            } catch {
+                user = null;
+            }
+            if (!playerId) return;
+            if (!user?.id) {
+                setPlayerReportMessage('Your account could not be identified. Please sign in again.', true);
+                return;
+            }
+
+            playerIdSubmitBtn.disabled = true;
+            playerIdSubmitBtn.textContent = 'SENDING...';
+            const { error } = await supabaseClient.from('player_reports').insert({
+                partner_id: user.id,
+                player_id: playerId,
+                status: 'pending'
+            });
+            playerIdSubmitBtn.disabled = false;
+            playerIdSubmitBtn.textContent = 'SUBMIT';
+
+            if (error) {
+                if (error.code === '23505') {
+                    setPlayerReportMessage('Already exists — this player ID has already been submitted.', true);
+                } else {
+                    setPlayerReportMessage('Could not submit this player ID. Please check the player_reports table and its access policies.', true);
+                }
+                return;
+            }
+
+            playerIdInput.value = '';
+            await loadPlayerReports();
+            setPlayerReportMessage('Player ID submitted for admin review.');
+        });
+
+        navAccountPage.addEventListener('click', (e) => {
+            e.preventDefault();
+            showProfilePage();
+            closeMenu();
+        });
+
+        document.getElementById('summaryExpandBtn').addEventListener('click', (event) => {
+            const detailsRow = document.getElementById('summaryDetailsRow');
+            const isExpanded = !detailsRow.classList.contains('hidden');
+            detailsRow.classList.toggle('hidden', isExpanded);
+            event.currentTarget.textContent = isExpanded ? '+' : '−';
+            event.currentTarget.setAttribute('aria-expanded', String(!isExpanded));
+            event.currentTarget.setAttribute('aria-label', isExpanded ? 'Expand website report' : 'Collapse website report');
+        });
+
+        const summaryMetrics = {
+            registrations: { label: 'Registrations', integer: true },
+            new_deposit: { label: 'New depositors', integer: true },
+            total_deposit: { label: 'Total deposit amount', integer: false },
+            bonus_amount: { label: 'Bonus amount', integer: false },
+            company_profit: { label: 'Company profit (total)', integer: false },
+            commission_amount: { label: 'Commission amount', integer: false }
+        };
+        let summaryReportState = { current: {}, total: {} };
+
+        const summaryPeriod = document.getElementById('summaryPeriod');
+        const summaryDateFrom = document.getElementById('summaryDateFrom');
+        const summaryDateTo = document.getElementById('summaryDateTo');
+
+        function formatDateInput(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function setSummaryPeriodDates(period) {
+            if (period === 'exact') return;
+
+            const today = new Date();
+            let from;
+            let to;
+            if (period === 'today') {
+                from = new Date(today);
+                to = new Date(today);
+            } else if (period === 'yesterday') {
+                from = new Date(today);
+                from.setDate(from.getDate() - 1);
+                to = new Date(from);
+            } else if (period === 'current-month') {
+                from = new Date(today.getFullYear(), today.getMonth(), 1);
+                to = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            } else if (period === 'last-month') {
+                from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                to = new Date(today.getFullYear(), today.getMonth(), 0);
+            } else if (period === 'current-year') {
+                from = new Date(today.getFullYear(), 0, 1);
+                to = new Date(today.getFullYear(), 11, 31);
+            } else if (period === 'last-year') {
+                from = new Date(today.getFullYear() - 1, 0, 1);
+                to = new Date(today.getFullYear() - 1, 11, 31);
+            }
+
+            if (from && to) {
+                summaryDateFrom.value = formatDateInput(from);
+                summaryDateTo.value = formatDateInput(to);
+            }
+        }
+
+        setSummaryPeriodDates(summaryPeriod.value);
+        summaryPeriod.addEventListener('change', () => setSummaryPeriodDates(summaryPeriod.value));
+        [summaryDateFrom, summaryDateTo].forEach(input => {
+            input.addEventListener('change', () => {
+                summaryPeriod.value = 'exact';
+            });
+        });
+
+        function dateOfReportRow(value) {
+            const text = String(value || '');
+            if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+            const date = new Date(value);
+            return Number.isNaN(date.getTime()) ? '' : formatDateInput(date);
+        }
+
+        function formatSummaryMetric(metric, amount) {
+            const value = Number(amount) || 0;
+            if (summaryMetrics[metric].integer) return String(Math.trunc(value));
+            return value < 0 ? `-$${Math.abs(value).toFixed(2)}` : `${value.toFixed(2)} $`;
+        }
+
+        async function loadSummaryAdjustments() {
+            setSummaryPeriodDates(summaryPeriod.value);
+            const message = document.getElementById('summaryReportMessage');
+            await refreshUserProfile();
+            const username = (() => {
+                try {
+                    return JSON.parse(localStorage.getItem('partnerProfile') || 'null')?.username;
+                } catch {
+                    return '';
+                }
+            })();
+            if (!username) {
+                message.textContent = 'Please sign in again to view your report.';
+                message.className = 'text-xs text-red-600';
+                return;
+            }
+
+            message.textContent = 'Loading report...';
+            message.className = 'text-xs text-gray-500';
+            const adjustments = [];
+            for (let offset = 0; ; offset += 1000) {
+                const { data, error } = await supabaseClient
+                    .from('partner_report_adjustments')
+                    .select('metric, amount, created_at')
+                    .ilike('username', username)
+                    .order('created_at', { ascending: true })
+                    .range(offset, offset + 999);
+                if (error) {
+                    message.textContent = 'Could not load report adjustments. Check the table grants and RLS policies.';
+                    message.className = 'text-xs text-red-600';
+                    return;
+                }
+                adjustments.push(...(data || []));
+                if (!data || data.length < 1000) break;
+            }
+
+            const dateFrom = document.getElementById('summaryDateFrom').value;
+            const dateTo = document.getElementById('summaryDateTo').value;
+            const totals = { current: {}, total: {} };
+            Object.keys(summaryMetrics).forEach(metric => {
+                totals.current[metric] = 0;
+                totals.total[metric] = 0;
+            });
+
+            adjustments.forEach(row => {
+                if (!Object.hasOwn(summaryMetrics, row.metric) || row.metric === 'commission_amount') return;
+                const amount = Number(row.amount) || 0;
+                totals.total[row.metric] += amount;
+                const rowDate = dateOfReportRow(row.created_at);
+                if ((!dateFrom || rowDate >= dateFrom) && (!dateTo || rowDate <= dateTo)) {
+                    totals.current[row.metric] += amount;
+                }
+            });
+
+            let commissionRate = 0;
+            try {
+                const user = JSON.parse(localStorage.getItem('partnerProfile') || 'null');
+                const rateText = getCommissionValue(user || {});
+                const parsedRate = parseFloat(rateText);
+                commissionRate = Number.isFinite(parsedRate) ? parsedRate : 0;
+            } catch {
+                commissionRate = 0;
+            }
+            totals.current.commission_amount = Number((totals.current.company_profit * commissionRate / 100).toFixed(2));
+            totals.total.commission_amount = Number((totals.total.company_profit * commissionRate / 100).toFixed(2));
+
+            summaryReportState = totals;
+            Object.keys(summaryMetrics).forEach(metric => {
+                const currentCell = document.getElementById(`summary-current-${metric}`);
+                const totalCell = document.getElementById(`summary-total-${metric}`);
+                currentCell.textContent = formatSummaryMetric(metric, totals.current[metric]);
+                totalCell.textContent = formatSummaryMetric(metric, totals.total[metric]);
+                currentCell.classList.toggle('text-red-600', totals.current[metric] < 0);
+                totalCell.classList.toggle('text-red-600', totals.total[metric] < 0);
+            });
+            message.className = 'hidden text-xs text-red-600';
+        }
+
+        document.getElementById('generateSummaryBtn').addEventListener('click', loadSummaryAdjustments);
+
+        document.getElementById('exportSummaryBtn').addEventListener('click', () => {
+            const rows = [
+                ['Website ID', 'Website', 'Metric', 'Current', 'Total'],
+                ...Object.entries(summaryMetrics).map(([metric, details]) => [
+                    '588578',
+                    '1xPartners.com',
+                    details.label,
+                    formatSummaryMetric(metric, summaryReportState.current[metric] || 0),
+                    formatSummaryMetric(metric, summaryReportState.total[metric] || 0)
+                ])
+            ];
+            const csv = rows.map(row => row.map(value => `"${String(value).replaceAll('"', '""')}"`).join(',')).join('\r\n');
+            const file = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+            const url = URL.createObjectURL(file);
+            const downloadLink = document.createElement('a');
+            downloadLink.href = url;
+            downloadLink.download = 'summary-report.csv';
+            downloadLink.click();
+            URL.revokeObjectURL(url);
+        });
+
+        menuOpenBtn.addEventListener('click', openMenu);
+        menuCloseBtn.addEventListener('click', closeMenu);
+        menuOverlay.addEventListener('click', closeMenu);
+
+        document.getElementById('navPaymentHistory').addEventListener('click', () => {
+            const notice = document.getElementById('paymentHistoryNotice');
+            notice.classList.remove('hidden');
+            closeMenu();
+            clearTimeout(notice.hideTimeout);
+            notice.hideTimeout = setTimeout(() => notice.classList.add('hidden'), 3500);
+        });
+        document.getElementById('refreshHomeStatisticsBtn').addEventListener('click', refreshHomeAdjustments);
+
+        document.getElementById('logoutBtn').addEventListener('click', endPartnerSession);
+    </script>
+</body>
+</html>
