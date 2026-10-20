@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>WinWin Partners</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -114,6 +114,11 @@
             background-color: #f2f3f7;
             color: #222222;
         }
+        #paymentHistoryView .tab-btn {
+            padding: 9px 7px;
+            font-size: 11px;
+            text-align: center;
+        }
         .status-spinner {
             width: 18px;
             height: 18px;
@@ -167,10 +172,6 @@
 
     <!-- APP CONTENT (Hidden until Logged In) -->
     <div id="appWrapper" class="hidden">
-
-        <div id="paymentHistoryNotice" role="status" class="hidden fixed left-1/2 top-16 z-[60] -translate-x-1/2 bg-[#1a1a1a] px-4 py-3 text-center text-sm font-medium text-white shadow-lg">
-            Minimum withdrawal amount is $30.
-        </div>
 
         <!-- Header -->
         <header class="bg-[#1a1a1a] flex justify-between items-center px-4 py-3 sticky top-0 z-40">
@@ -252,11 +253,6 @@
                 <div class="py-3 px-5">
                     <h3 class="text-gray-400 text-xs font-semibold tracking-wider mb-2 mt-2">REPORTS</h3>
                     <ul class="flex flex-col text-[15px] pb-6">
-                        <li class="py-2.5">
-                            <a href="#" id="navSummaryPage" class="flex items-center text-[#cccccc] hover:text-white gap-4">
-                                <i class="fa-solid fa-chart-simple w-5 text-center text-lg"></i> Summary
-                            </a>
-                        </li>
                         <li class="py-2.5">
                             <a href="#" id="navPlayerReportPage" class="flex items-center text-[#cccccc] hover:text-white gap-4">
                                 <i class="fa-solid fa-id-card-clip w-5 text-center text-lg"></i> Player report
@@ -348,100 +344,38 @@
             </div>
         </main>
 
-        <!-- Summary Content View -->
-        <section id="summaryView" class="hidden max-w-lg mx-auto bg-white min-h-[calc(100vh-60px)] p-3">
-            <div class="space-y-3">
-                <div>
-                    <label for="summaryPeriod" class="mb-2 block text-sm font-medium text-gray-700">Time interval</label>
-                    <select id="summaryPeriod" class="w-full border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-200">
-                        <option value="exact">Exact period</option>
-                        <option value="today">Today</option>
-                        <option value="yesterday">Yesterday</option>
-                        <option value="current-month" selected>Current month</option>
-                        <option value="last-month">Last month</option>
-                        <option value="current-year">Current year</option>
-                        <option value="last-year">Last year</option>
-                    </select>
+        <!-- Payment History Content View -->
+        <section id="paymentHistoryView" class="hidden max-w-4xl mx-auto bg-white min-h-[calc(100vh-60px)] p-4">
+            <div class="bg-white border border-gray-200 shadow-sm p-3">
+                <div class="tab-bar">
+                    <button id="tabPaymentRequests" type="button" onclick="switchPaymentTab('requests')" class="tab-btn active-tab">REQUEST STATUS</button>
+                    <button id="tabPaymentHistory" type="button" onclick="switchPaymentTab('history')" class="tab-btn inactive-tab">PAYMENT HISTORY</button>
                 </div>
 
-                <div class="flex items-center gap-2 border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
-                    <i class="fa-regular fa-calendar text-lg"></i>
-                    <input id="summaryDateFrom" type="date" aria-label="Start date" class="min-w-0 flex-1 bg-transparent text-center focus:outline-none">
-                    <i class="fa-solid fa-arrow-right text-gray-400"></i>
-                    <input id="summaryDateTo" type="date" aria-label="End date" class="min-w-0 flex-1 bg-transparent text-center focus:outline-none">
-                </div>
-
-                <div>
-                    <label for="summarySource" class="mb-2 block text-sm font-medium text-gray-700">Registration Source</label>
-                    <select id="summarySource" class="w-full border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none">
-                        <option value="">Select...</option>
-                        <option>Website</option>
-                        <option>Affiliate link</option>
-                        <option>Promo code</option>
-                    </select>
-                </div>
-
-                <button id="generateSummaryBtn" type="button" class="w-full bg-[#84d000] py-2.5 text-sm font-semibold text-[#111] hover:bg-[#78bd00]">GENERATE REPORT</button>
-
-                <div class="flex items-center justify-between gap-3 pt-1">
-                    <select id="summaryItemsLimit" class="w-[48%] bg-[#f2f3f7] px-3 py-2 text-sm text-gray-700 focus:outline-none">
-                        <option value="8" selected>8 items selected</option>
-                        <option value="10">10 items selected</option>
-                        <option value="25">25 items selected</option>
-                    </select>
-                    <button id="exportSummaryBtn" type="button" class="w-[40%] bg-[#e1ef32] py-2 text-sm font-semibold text-white hover:bg-[#d4e329]">
-                        EXPORT <i class="fa-solid fa-chevron-down ml-2 text-xs"></i>
+                <div id="paymentRequestPanel" class="mb-4 border border-gray-200 bg-[#f7f7f7] p-3">
+                    <p class="text-sm text-gray-600">Available to withdraw</p>
+                    <p id="paymentAvailableBalance" class="my-1 text-xl font-bold text-[#333]">$0.00</p>
+                    <p class="mb-2 text-xs text-gray-500">Minimum payment request: $30.00</p>
+                    <button id="createPaymentRequestBtn" type="button" class="bg-[#84d000] px-3 py-2 text-xs font-semibold text-[#111] disabled:cursor-not-allowed disabled:opacity-50">
+                        REQUEST PAYMENT
                     </button>
+                    <p id="paymentRequestMessage" role="status" class="hidden mt-2 text-xs leading-snug"></p>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full table-fixed border-collapse text-xs">
-                        <thead class="bg-[#1a1a1a] text-white">
-                            <tr>
-                                <th class="w-9 border-r-2 border-white px-1.5 py-2"></th>
-                                <th class="w-[30%] border-r-2 border-white px-2 py-2 text-left font-semibold">Website ID <i class="fa-solid fa-arrows-up-down ml-1 text-[10px]"></i></th>
-                                <th class="px-2 py-2 text-left font-semibold">Website <i class="fa-solid fa-arrows-up-down ml-1 text-[10px]"></i></th>
+                <div class="w-full">
+                    <table class="payment-table w-full table-fixed border-collapse text-left text-xs sm:text-sm">
+                        <thead>
+                            <tr class="bg-[#1a1a1a] text-white">
+                                <th class="w-[12%] py-3 text-center"></th>
+                                <th class="w-[25%] border-l border-[#333] px-1.5 py-3 sm:px-3">Currency</th>
+                                <th class="w-[29%] border-l border-[#333] px-1.5 py-3 sm:px-3">Date</th>
+                                <th class="w-[34%] border-l border-[#333] px-1.5 py-3 text-right sm:px-3">Payout</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr class="bg-[#eef0f4] text-gray-700">
-                                <td class="border-r-2 border-white px-1.5 py-1.5 text-center">
-                                    <button id="summaryExpandBtn" type="button" aria-expanded="false" aria-label="Expand website report" class="h-6 w-6 rounded-full bg-[#84d000] text-base leading-none text-white">+</button>
-                                </td>
-                                <td class="border-r-2 border-white px-2 py-1.5 text-center">588578</td>
-                                <td class="break-all px-2 py-1.5">1xPartners.com</td>
-                            </tr>
-                            <tr id="summaryDetailsRow" class="hidden">
-                                <td colspan="3" class="p-0">
-                                    <table class="w-full table-fixed border-collapse text-xs">
-                                        <thead class="border-y-2 border-white bg-white text-gray-700">
-                                            <tr><th class="w-[48%] px-2 py-2"></th><th class="w-[26%] px-1 py-2 text-center font-medium">Current</th><th class="w-[26%] px-1 py-2 text-center font-medium">Total</th></tr>
-                                        </thead>
-                                        <tbody class="divide-y-2 divide-white bg-[#f8f9fb] text-gray-700">
-                                            <tr><td class="px-2 py-1.5">Registrations:</td><td id="summary-current-registrations" class="px-1 py-1.5 text-center">0</td><td id="summary-total-registrations" class="px-1 py-1.5 text-center">0</td></tr>
-                                            <tr><td class="px-2 py-1.5">New depositors:</td><td id="summary-current-new_deposit" class="px-1 py-1.5 text-center">0</td><td id="summary-total-new_deposit" class="px-1 py-1.5 text-center">0</td></tr>
-                                            <tr><td class="px-2 py-1.5">Total deposit amount:</td><td id="summary-current-total_deposit" class="px-1 py-1.5 text-center">0.00 $</td><td id="summary-total-total_deposit" class="px-1 py-1.5 text-center">0.00 $</td></tr>
-                                            <tr><td class="px-2 py-1.5">Bonus amount:</td><td id="summary-current-bonus_amount" class="px-1 py-1.5 text-center">0.00 $</td><td id="summary-total-bonus_amount" class="px-1 py-1.5 text-center">0.00 $</td></tr>
-                                            <tr><td class="px-2 py-1.5">Company profit (total):</td><td id="summary-current-company_profit" class="px-1 py-1.5 text-center">0.00 $</td><td id="summary-total-company_profit" class="px-1 py-1.5 text-center">0.00 $</td></tr>
-                                            <tr><td class="px-2 py-1.5">Commission amount:</td><td id="summary-current-commission_amount" class="px-1 py-1.5 text-center">0.00 $</td><td id="summary-total-commission_amount" class="px-1 py-1.5 text-center">0.00 $</td></tr>
-                                        </tbody>
-                                    </table>
-                                </td>
-                            </tr>
-                        </tbody>
+                        <tbody id="paymentRequestsTableBody" class="text-sm text-[#333]"></tbody>
                     </table>
                 </div>
-
-                <p id="summaryReportMessage" role="status" class="hidden text-xs text-red-600"></p>
-                <div class="text-sm text-gray-400">Records from 1 to 1 (1 records in total)</div>
-                <div class="flex gap-1">
-                    <button type="button" disabled class="h-10 w-10 bg-[#f2f3f7] text-gray-400">&lt;</button>
-                    <button type="button" class="h-10 w-10 bg-[#84d000] text-white">1</button>
-                    <button type="button" disabled class="h-10 w-10 bg-[#f2f3f7] text-gray-400">&gt;</button>
-                </div>
-                <select aria-label="Rows per page" class="w-20 border border-gray-300 bg-white px-3 py-2 text-sm">
-                    <option>10</option>
-                </select>
+                <p id="paymentRecordsCount" class="mt-4 text-sm text-gray-500">No records</p>
             </div>
         </section>
 
@@ -971,6 +905,15 @@
         const playerReportMessage = document.getElementById('playerReportMessage');
         const playerReportCount = document.getElementById('playerReportCount');
         const playerReportCards = document.getElementById('playerReportCards');
+        const paymentHistoryView = document.getElementById('paymentHistoryView');
+        const paymentRequestButton = document.getElementById('createPaymentRequestBtn');
+        const paymentRequestMessage = document.getElementById('paymentRequestMessage');
+        const paymentRequestsTableBody = document.getElementById('paymentRequestsTableBody');
+        const paymentRecordsCount = document.getElementById('paymentRecordsCount');
+        let availableToWithdraw = 0;
+        let baseAvailableBalance = 0;
+        let reservedPaymentAmount = 0;
+        let currentPaymentTab = 'requests';
 
         // Affiliate Links State (2 Cards Only)
         let currentAffiliateTab = 'created';
@@ -1280,6 +1223,26 @@
             'available_to_withdraw', 'yesterday', 'current_month', 'days_30', 'total'
         ];
 
+        function formatPaymentAmount(amount) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+        }
+
+        function updateAvailableBalanceDisplay() {
+            availableToWithdraw = Math.max(0, baseAvailableBalance - reservedPaymentAmount);
+            const formatted = formatPaymentAmount(availableToWithdraw);
+            const homeAmount = document.getElementById('home-available_to_withdraw');
+            const paymentAmount = document.getElementById('paymentAvailableBalance');
+            if (homeAmount) homeAmount.textContent = formatted;
+            if (paymentAmount) paymentAmount.textContent = formatted;
+            if (paymentRequestButton) paymentRequestButton.disabled = availableToWithdraw < 30;
+        }
+
+        function escapePaymentText(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[char]);
+        }
+
         async function refreshHomeAdjustments() {
             let user;
             try {
@@ -1308,12 +1271,108 @@
             (data || []).forEach(row => {
                 if (Object.hasOwn(totals, row.metric)) totals[row.metric] += Number(row.amount) || 0;
             });
+            baseAvailableBalance = totals.available_to_withdraw;
             homeAdjustmentMetrics.forEach(metric => {
                 const value = document.getElementById(`home-${metric}`);
-                if (value) value.textContent = new Intl.NumberFormat('en-US', {
-                    style: 'currency', currency: 'USD'
-                }).format(totals[metric]);
+                if (value && metric !== 'available_to_withdraw') value.textContent = formatPaymentAmount(totals[metric]);
             });
+            updateAvailableBalanceDisplay();
+            await loadPaymentRequests({ quiet: true });
+        }
+
+        async function loadPaymentRequests(options = {}) {
+            let user;
+            try {
+                user = JSON.parse(localStorage.getItem('partnerProfile') || 'null');
+            } catch {
+                user = null;
+            }
+            if (!user?.id) return;
+
+            const { data, error } = await supabaseClient
+                .from('payment_requests')
+                .select('id, amount, currency, status, created_at')
+                .eq('partner_id', user.id)
+                .order('created_at', { ascending: false });
+            if (error) {
+                if (!options.quiet) {
+                    setPaymentRequestMessage('Could not load payment requests. Check the payment_requests table and its access policies.', true);
+                }
+                return;
+            }
+
+            const currentUser = JSON.parse(localStorage.getItem('partnerProfile') || 'null');
+            if (!currentUser || currentUser.id !== user.id) return;
+
+            const requests = data || [];
+            reservedPaymentAmount = requests.reduce((sum, item) => {
+                const status = String(item.status || 'processing').toLowerCase();
+                return ['processing', 'pending'].includes(status) ? sum + (Number(item.amount) || 0) : sum;
+            }, 0);
+            updateAvailableBalanceDisplay();
+
+            const visibleRequests = currentPaymentTab === 'history'
+                ? requests.filter(item => ['paid', 'completed'].includes(String(item.status || '').toLowerCase()))
+                : requests;
+            paymentRequestsTableBody.innerHTML = '';
+
+            if (!visibleRequests.length) {
+                paymentRequestsTableBody.innerHTML = '<tr><td colspan="4" class="bg-[#f2f3f7] px-3 py-6 text-center text-gray-500">No payment records found</td></tr>';
+                paymentRecordsCount.textContent = 'Records from 0 to 0 (0 records in total)';
+                return;
+            }
+
+            visibleRequests.forEach((item, index) => {
+                const amount = Number(item.amount) || 0;
+                const currency = escapePaymentText(item.currency || 'USD');
+                const status = escapePaymentText(String(item.status || 'processing').toUpperCase());
+                const date = item.created_at ? new Date(item.created_at).toLocaleDateString('en-GB') : '—';
+                const safeDate = escapePaymentText(date);
+                const detailId = `payment-detail-${index}`;
+                const row = document.createElement('tbody');
+                row.innerHTML = `
+                    <tr class="border-b-2 border-white bg-[#eef0f4]">
+                        <td class="py-3 text-center"><button type="button" onclick="togglePaymentDetail('${detailId}', this)" class="rounded-full bg-[#8cc63f] px-2 py-1 font-bold text-white" aria-label="Show payment details">+</button></td>
+                        <td class="border-l-2 border-white px-1.5 py-3 text-center sm:px-3">${currency}</td>
+                        <td class="whitespace-nowrap border-l-2 border-white px-1 py-3 text-center text-[11px] sm:px-3 sm:text-sm">${safeDate}</td>
+                        <td class="whitespace-nowrap border-l-2 border-white px-1.5 py-3 text-right text-[11px] sm:px-3 sm:text-sm">${formatPaymentAmount(amount)}</td>
+                    </tr>
+                    <tr id="${detailId}" class="hidden bg-white">
+                        <td colspan="4" class="p-0">
+                            <div class="grid grid-cols-[1fr_auto] gap-2 border-b border-gray-200 px-2 py-3 text-xs sm:px-3 sm:text-sm"><span>Revenue:</span><span>${formatPaymentAmount(amount)}</span></div>
+                            <div class="grid grid-cols-[1fr_auto] gap-2 border-b border-gray-200 px-2 py-3 text-xs sm:px-3 sm:text-sm"><span>Balance:</span><span>${status === 'PROCESSING' || status === 'PENDING' ? formatPaymentAmount(amount) : formatPaymentAmount(0)}</span></div>
+                            <div class="grid grid-cols-[1fr_auto] gap-2 px-2 py-3 text-xs sm:px-3 sm:text-sm"><span>Status:</span><span class="font-semibold">${status}</span></div>
+                        </td>
+                    </tr>`;
+                paymentRequestsTableBody.append(...row.children);
+            });
+            paymentRecordsCount.textContent = `Records from 1 to ${visibleRequests.length} (${visibleRequests.length} records in total)`;
+        }
+
+        function setPaymentRequestMessage(message, isError = false) {
+            const messageElement = document.getElementById('paymentRequestMessage');
+            messageElement.textContent = message;
+            messageElement.className = `mt-2 text-xs leading-snug ${isError ? 'text-red-600' : 'text-green-700'}`;
+        }
+
+        function switchPaymentTab(tab) {
+            currentPaymentTab = tab;
+            const requestsTab = document.getElementById('tabPaymentRequests');
+            const historyTab = document.getElementById('tabPaymentHistory');
+            const requestPanel = document.getElementById('paymentRequestPanel');
+            requestsTab.className = tab === 'requests' ? 'tab-btn active-tab' : 'tab-btn inactive-tab';
+            historyTab.className = tab === 'history' ? 'tab-btn active-tab-right' : 'tab-btn inactive-tab';
+            requestPanel.classList.toggle('hidden', tab !== 'requests');
+            loadPaymentRequests();
+        }
+
+        function togglePaymentDetail(detailId, button) {
+            const row = document.getElementById(detailId);
+            const isOpening = row.classList.contains('hidden');
+            row.classList.toggle('hidden', !isOpening);
+            button.textContent = isOpening ? '−' : '+';
+            button.classList.toggle('bg-[#6b5296]', isOpening);
+            button.classList.toggle('bg-[#8cc63f]', !isOpening);
         }
 
         // Handle Login Submit
@@ -1363,8 +1422,8 @@
         
         // Navigation Buttons
         const navMainPage = document.getElementById('navMainPage');
-        const navSummaryPage = document.getElementById('navSummaryPage');
         const navCommissionPage = document.getElementById('navCommissionPage');
+        const navPaymentHistory = document.getElementById('navPaymentHistory');
         const navAccountPage = document.getElementById('navAccountPage');
         const navAffiliateLinksPage = document.getElementById('navAffiliateLinksPage');
         const navPromoCodesPage = document.getElementById('navPromoCodesPage');
@@ -1372,7 +1431,6 @@
         
         // Views
         const dashboardView = document.getElementById('dashboardView');
-        const summaryView = document.getElementById('summaryView');
         const commissionView = document.getElementById('commissionView');
         const affiliateLinksView = document.getElementById('affiliateLinksView');
         const promoCodesView = document.getElementById('promoCodesView');
@@ -1409,7 +1467,7 @@
 
         // Reset Menu Colors
         function resetNavColors() {
-            const navItems = [navMainPage, navSummaryPage, navCommissionPage, navAccountPage, navAffiliateLinksPage, navPromoCodesPage, navPlayerReportPage];
+            const navItems = [navMainPage, navCommissionPage, navPaymentHistory, navAccountPage, navAffiliateLinksPage, navPromoCodesPage, navPlayerReportPage];
             navItems.forEach(nav => {
                 nav.classList.remove('text-[#8cc63f]', 'font-medium');
                 nav.classList.add('text-[#cccccc]');
@@ -1418,7 +1476,7 @@
 
         function hideAllViews() {
             dashboardView.classList.add('hidden');
-            summaryView.classList.add('hidden');
+            paymentHistoryView.classList.add('hidden');
             commissionView.classList.add('hidden');
             affiliateLinksView.classList.add('hidden');
             promoCodesView.classList.add('hidden');
@@ -1446,16 +1504,17 @@
             refreshHomeAdjustments();
         }
 
-        function showSummaryPage() {
+        function showPaymentHistoryPage() {
             hideAllViews();
             resetNavColors();
-            summaryView.classList.remove('hidden');
-            navSummaryPage.classList.remove('text-[#cccccc]');
-            navSummaryPage.classList.add('text-[#8cc63f]', 'font-medium');
+            paymentHistoryView.classList.remove('hidden');
+            navPaymentHistory.classList.remove('text-[#cccccc]');
+            navPaymentHistory.classList.add('text-[#8cc63f]', 'font-medium');
             window.scrollTo(0, 0);
-            loadSummaryAdjustments();
+            loadPaymentRequests();
+            refreshHomeAdjustments();
         }
-        
+
         function showCommissionPage() {
             hideAllViews();
             resetNavColors();
@@ -1626,11 +1685,7 @@
             closeMenu();
         });
 
-        navSummaryPage.addEventListener('click', (e) => {
-            e.preventDefault();
-            showSummaryPage();
-            closeMenu();
-        });
+        
         
         navCommissionPage.addEventListener('click', (e) => {
             e.preventDefault();
@@ -1701,202 +1756,53 @@
             closeMenu();
         });
 
-        document.getElementById('summaryExpandBtn').addEventListener('click', (event) => {
-            const detailsRow = document.getElementById('summaryDetailsRow');
-            const isExpanded = !detailsRow.classList.contains('hidden');
-            detailsRow.classList.toggle('hidden', isExpanded);
-            event.currentTarget.textContent = isExpanded ? '+' : '−';
-            event.currentTarget.setAttribute('aria-expanded', String(!isExpanded));
-            event.currentTarget.setAttribute('aria-label', isExpanded ? 'Expand website report' : 'Collapse website report');
-        });
-
-        const summaryMetrics = {
-            registrations: { label: 'Registrations', integer: true },
-            new_deposit: { label: 'New depositors', integer: true },
-            total_deposit: { label: 'Total deposit amount', integer: false },
-            bonus_amount: { label: 'Bonus amount', integer: false },
-            company_profit: { label: 'Company profit (total)', integer: false },
-            commission_amount: { label: 'Commission amount', integer: false }
-        };
-        let summaryReportState = { current: {}, total: {} };
-
-        const summaryPeriod = document.getElementById('summaryPeriod');
-        const summaryDateFrom = document.getElementById('summaryDateFrom');
-        const summaryDateTo = document.getElementById('summaryDateTo');
-
-        function formatDateInput(date) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-
-        function setSummaryPeriodDates(period) {
-            if (period === 'exact') return;
-
-            const today = new Date();
-            let from;
-            let to;
-            if (period === 'today') {
-                from = new Date(today);
-                to = new Date(today);
-            } else if (period === 'yesterday') {
-                from = new Date(today);
-                from.setDate(from.getDate() - 1);
-                to = new Date(from);
-            } else if (period === 'current-month') {
-                from = new Date(today.getFullYear(), today.getMonth(), 1);
-                to = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-            } else if (period === 'last-month') {
-                from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-                to = new Date(today.getFullYear(), today.getMonth(), 0);
-            } else if (period === 'current-year') {
-                from = new Date(today.getFullYear(), 0, 1);
-                to = new Date(today.getFullYear(), 11, 31);
-            } else if (period === 'last-year') {
-                from = new Date(today.getFullYear() - 1, 0, 1);
-                to = new Date(today.getFullYear() - 1, 11, 31);
-            }
-
-            if (from && to) {
-                summaryDateFrom.value = formatDateInput(from);
-                summaryDateTo.value = formatDateInput(to);
-            }
-        }
-
-        setSummaryPeriodDates(summaryPeriod.value);
-        summaryPeriod.addEventListener('change', () => setSummaryPeriodDates(summaryPeriod.value));
-        [summaryDateFrom, summaryDateTo].forEach(input => {
-            input.addEventListener('change', () => {
-                summaryPeriod.value = 'exact';
-            });
-        });
-
-        function dateOfReportRow(value) {
-            const text = String(value || '');
-            if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
-            const date = new Date(value);
-            return Number.isNaN(date.getTime()) ? '' : formatDateInput(date);
-        }
-
-        function formatSummaryMetric(metric, amount) {
-            const value = Number(amount) || 0;
-            if (summaryMetrics[metric].integer) return String(Math.trunc(value));
-            return value < 0 ? `-$${Math.abs(value).toFixed(2)}` : `${value.toFixed(2)} $`;
-        }
-
-        async function loadSummaryAdjustments() {
-            setSummaryPeriodDates(summaryPeriod.value);
-            const message = document.getElementById('summaryReportMessage');
-            await refreshUserProfile();
-            const username = (() => {
-                try {
-                    return JSON.parse(localStorage.getItem('partnerProfile') || 'null')?.username;
-                } catch {
-                    return '';
-                }
-            })();
-            if (!username) {
-                message.textContent = 'Please sign in again to view your report.';
-                message.className = 'text-xs text-red-600';
-                return;
-            }
-
-            message.textContent = 'Loading report...';
-            message.className = 'text-xs text-gray-500';
-            const adjustments = [];
-            for (let offset = 0; ; offset += 1000) {
-                const { data, error } = await supabaseClient
-                    .from('partner_report_adjustments')
-                    .select('metric, amount, created_at')
-                    .ilike('username', username)
-                    .order('created_at', { ascending: true })
-                    .range(offset, offset + 999);
-                if (error) {
-                    message.textContent = 'Could not load report adjustments. Check the table grants and RLS policies.';
-                    message.className = 'text-xs text-red-600';
-                    return;
-                }
-                adjustments.push(...(data || []));
-                if (!data || data.length < 1000) break;
-            }
-
-            const dateFrom = document.getElementById('summaryDateFrom').value;
-            const dateTo = document.getElementById('summaryDateTo').value;
-            const totals = { current: {}, total: {} };
-            Object.keys(summaryMetrics).forEach(metric => {
-                totals.current[metric] = 0;
-                totals.total[metric] = 0;
-            });
-
-            adjustments.forEach(row => {
-                if (!Object.hasOwn(summaryMetrics, row.metric) || row.metric === 'commission_amount') return;
-                const amount = Number(row.amount) || 0;
-                totals.total[row.metric] += amount;
-                const rowDate = dateOfReportRow(row.created_at);
-                if ((!dateFrom || rowDate >= dateFrom) && (!dateTo || rowDate <= dateTo)) {
-                    totals.current[row.metric] += amount;
-                }
-            });
-
-            let commissionRate = 0;
-            try {
-                const user = JSON.parse(localStorage.getItem('partnerProfile') || 'null');
-                const rateText = getCommissionValue(user || {});
-                const parsedRate = parseFloat(rateText);
-                commissionRate = Number.isFinite(parsedRate) ? parsedRate : 0;
-            } catch {
-                commissionRate = 0;
-            }
-            totals.current.commission_amount = Number((totals.current.company_profit * commissionRate / 100).toFixed(2));
-            totals.total.commission_amount = Number((totals.total.company_profit * commissionRate / 100).toFixed(2));
-
-            summaryReportState = totals;
-            Object.keys(summaryMetrics).forEach(metric => {
-                const currentCell = document.getElementById(`summary-current-${metric}`);
-                const totalCell = document.getElementById(`summary-total-${metric}`);
-                currentCell.textContent = formatSummaryMetric(metric, totals.current[metric]);
-                totalCell.textContent = formatSummaryMetric(metric, totals.total[metric]);
-                currentCell.classList.toggle('text-red-600', totals.current[metric] < 0);
-                totalCell.classList.toggle('text-red-600', totals.total[metric] < 0);
-            });
-            message.className = 'hidden text-xs text-red-600';
-        }
-
-        document.getElementById('generateSummaryBtn').addEventListener('click', loadSummaryAdjustments);
-
-        document.getElementById('exportSummaryBtn').addEventListener('click', () => {
-            const rows = [
-                ['Website ID', 'Website', 'Metric', 'Current', 'Total'],
-                ...Object.entries(summaryMetrics).map(([metric, details]) => [
-                    '588578',
-                    '1xPartners.com',
-                    details.label,
-                    formatSummaryMetric(metric, summaryReportState.current[metric] || 0),
-                    formatSummaryMetric(metric, summaryReportState.total[metric] || 0)
-                ])
-            ];
-            const csv = rows.map(row => row.map(value => `"${String(value).replaceAll('"', '""')}"`).join(',')).join('\r\n');
-            const file = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-            const url = URL.createObjectURL(file);
-            const downloadLink = document.createElement('a');
-            downloadLink.href = url;
-            downloadLink.download = 'summary-report.csv';
-            downloadLink.click();
-            URL.revokeObjectURL(url);
-        });
-
         menuOpenBtn.addEventListener('click', openMenu);
         menuCloseBtn.addEventListener('click', closeMenu);
         menuOverlay.addEventListener('click', closeMenu);
 
-        document.getElementById('navPaymentHistory').addEventListener('click', () => {
-            const notice = document.getElementById('paymentHistoryNotice');
-            notice.classList.remove('hidden');
+        navPaymentHistory.addEventListener('click', () => {
+            showPaymentHistoryPage();
             closeMenu();
-            clearTimeout(notice.hideTimeout);
-            notice.hideTimeout = setTimeout(() => notice.classList.add('hidden'), 3500);
         });
+
+        paymentRequestButton.addEventListener('click', async () => {
+            let user;
+            try {
+                user = JSON.parse(localStorage.getItem('partnerProfile') || 'null');
+            } catch {
+                user = null;
+            }
+            if (!user?.id) {
+                setPaymentRequestMessage('Your account could not be identified. Please sign in again.', true);
+                return;
+            }
+            if (availableToWithdraw < 30) {
+                setPaymentRequestMessage('The minimum payment request is $30.00.', true);
+                return;
+            }
+
+            const requestAmount = Number(availableToWithdraw.toFixed(2));
+            paymentRequestButton.disabled = true;
+            paymentRequestButton.textContent = 'SUBMITTING...';
+            const { error } = await supabaseClient.from('payment_requests').insert({
+                partner_id: user.id,
+                amount: requestAmount,
+                currency: 'USD',
+                status: 'processing'
+            });
+            paymentRequestButton.textContent = 'REQUEST PAYMENT';
+
+            if (error) {
+                updateAvailableBalanceDisplay();
+                const detail = error.message || error.details || error.hint || 'Unknown Supabase error';
+                setPaymentRequestMessage(`Could not create the request: ${detail}`, true);
+                return;
+            }
+
+            setPaymentRequestMessage(`${formatPaymentAmount(requestAmount)} payment request submitted. Status: Processing.`);
+            await loadPaymentRequests({ quiet: true });
+        });
+
         document.getElementById('refreshHomeStatisticsBtn').addEventListener('click', refreshHomeAdjustments);
 
         document.getElementById('logoutBtn').addEventListener('click', endPartnerSession);
